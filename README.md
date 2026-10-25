@@ -34,6 +34,8 @@ IMAP poll ─► parse request (LLM) ─► search + download (Playwright) ─�
 - **A real browser is required.** The site is a FileMaker WebDirect (Vaadin) app that talks to its server over a push channel. There's no JSON API to call directly.
 - **Verify the matter number.** If a search isn't committed properly, the site silently opens matter `M00001`. The scraper always checks that the matter shown matches the one requested (after normalizing case, spaces, and a missing `M`) and fails loudly otherwise.
 - **Virtualized document list.** Only about 9 rows exist in the DOM at once. The downloader processes the visible rows, de-duplicates by document number, scrolls, and repeats.
+- **Header fields are read by FileMaker layout object number** (e.g. the `fm_object_286` class), not by position in the page text. The page text lists values and labels in different orders, and the on-screen "Type" and "Category" labels sit above each other's values. Dates are checked for the expected `MM/DD/YYYY` format and converted to ISO, so a layout change fails loudly instead of producing wrong data.
+- **"Not found" vs "something broke" are separate errors.** A nonexistent matter makes the site show a "No Records Found" dialog, which becomes a `MatterNotFoundError`. Timeouts and unexpected pages become a `ScrapeError`.
 - **Waits target specific content** (a tab label, the download dialog) rather than "page loaded" or "network idle", which never settle on this site.
 - **Attachment budget of about 18 MB.** Gmail's 25 MB limit applies after base64 encoding, which adds roughly a third.
 - **At-most-once processing.** Emails are marked read when claimed, so a crash can't cause duplicate replies. The agent ignores mail from itself and from auto-responders to avoid reply loops.
@@ -73,7 +75,7 @@ npm run typecheck
 ## Status
 
 - [x] Project setup: config validation, logging
-- [ ] Scraper: search, matter verification, metadata, tab counts
+- [x] Scraper: search, matter verification, metadata, tab counts
 - [ ] Downloader and ZIP
 - [ ] Reply email
 - [ ] LLM request parsing
@@ -86,3 +88,4 @@ npm run typecheck
 - Requests are processed one at a time, so a burst of emails queues up.
 - Depends on the site's current layout. If labels or structure change, selectors in `src/site/constants.ts` need updating.
 - If the process crashes mid-request, that email gets no reply (by design, to avoid duplicates).
+- No automated test suite; behaviour is checked by running the CLI against real matters (existing, nonexistent, and malformed input).
