@@ -13,23 +13,17 @@ import {
 
 const MATTER_NUMBER = /^M?[\s-]*(\d{5})$/i;
 
-/** Turns "m12205", "M 12205" or "12205" into "M12205". Returns null if it isn't a matter number. */
 export function normalizeMatterNumber(input: string): string | null {
   const match = MATTER_NUMBER.exec(input.trim());
   return match ? `M${match[1]}` : null;
 }
 
-/**
- * Searches for a matter and leaves the page on its matter view.
- * Throws MatterNotFoundError if the site has no such matter, and ScrapeError if it
- * opened a different matter (the site silently falls back to M00001 on a bad search).
- */
 export async function openMatter(page: Page, matterNumber: string): Promise<void> {
   logger.info({ matterNumber }, 'Opening search page');
   await page.goto(SITE_URL);
   await page.getByText(SEARCH.landingText).first().waitFor({ timeout: TIMEOUTS.pageLoad });
 
-  // The box is a FileMaker div, not an <input>: its inner .text only becomes editable after a click.
+  // The box is a FileMaker div, not an <input>: its inner .text only becomes editable a moment after a click.
   const searchBox = page.locator('.fm-textarea').filter({ hasText: SEARCH.boxPlaceholder }).first();
   await searchBox.locator('.text').click();
   await page.waitForTimeout(TIMEOUTS.beforeTyping);
@@ -50,6 +44,7 @@ export async function openMatter(page: Page, matterNumber: string): Promise<void
     throw new MatterNotFoundError(matterNumber);
   }
 
+  // A bad search can silently open M00001 instead of failing, so confirm we got the right matter.
   const shownText = await page.locator(layoutObjectSelector(HEADER_FIELDS.matterNumber)).first().innerText();
   const shown = normalizeMatterNumber(shownText);
   if (shown !== matterNumber) {
