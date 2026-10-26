@@ -1,9 +1,8 @@
 import type { Page } from 'playwright';
 import { ScrapeError } from '../errors';
-import { DocTypeSchema, type DocType, type MatterMetadata, type TabCounts } from '../types';
+import { DocType, DocTypeSchema, type MatterMetadata, type TabCounts } from '../types';
 import { HEADER_FIELDS, TAB_LABEL, layoutObjectSelector, type HeaderField } from './constants';
 
-/** Reads one header field's visible text, collapsing whitespace. Empty or missing fields become null. */
 async function readHeaderField(page: Page, field: HeaderField): Promise<string | null> {
   const element = page.locator(layoutObjectSelector(HEADER_FIELDS[field])).first();
   if ((await element.count()) === 0) return null;
@@ -11,7 +10,6 @@ async function readHeaderField(page: Page, field: HeaderField): Promise<string |
   return text || null;
 }
 
-/** "04/07/2025" → "2025-04-07". Throws if the site's date format changes, rather than guessing. */
 function toIsoDate(value: string | null, field: HeaderField): string | null {
   if (value === null) return null;
   const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
@@ -20,7 +18,6 @@ function toIsoDate(value: string | null, field: HeaderField): string | null {
   return `${year}-${month}-${day}`;
 }
 
-/** Reads the matter header. Expects the page to already be on a verified matter view. */
 export async function readMetadata(page: Page): Promise<MatterMetadata> {
   const matterNumber = await readHeaderField(page, 'matterNumber');
   const title = await readHeaderField(page, 'title');
@@ -35,12 +32,11 @@ export async function readMetadata(page: Page): Promise<MatterMetadata> {
     category: await readHeaderField(page, 'category'),
     status: await readHeaderField(page, 'status'),
     dateReceived: toIsoDate(await readHeaderField(page, 'dateReceived'), 'dateReceived'),
-    decisionDate: toIsoDate(await readHeaderField(page, 'decisionDate'), 'decisionDate'),
+    finalDate: toIsoDate(await readHeaderField(page, 'finalDate'), 'finalDate'),
     outcome: await readHeaderField(page, 'outcome'),
   };
 }
 
-/** Parses the tab buttons ("Exhibits - 13", ...) into a count per document type. */
 export async function readTabCounts(page: Page): Promise<TabCounts> {
   const labels = await page.getByRole('button', { name: TAB_LABEL }).allInnerTexts();
   const counts = new Map<DocType, number>();
@@ -55,10 +51,10 @@ export async function readTabCounts(page: Page): Promise<TabCounts> {
     return count;
   };
   return {
-    Exhibits: countFor('Exhibits'),
-    'Key Documents': countFor('Key Documents'),
-    'Other Documents': countFor('Other Documents'),
-    Transcripts: countFor('Transcripts'),
-    Recordings: countFor('Recordings'),
+    [DocType.EXHIBITS]: countFor(DocType.EXHIBITS),
+    [DocType.KEY_DOCUMENTS]: countFor(DocType.KEY_DOCUMENTS),
+    [DocType.OTHER_DOCUMENTS]: countFor(DocType.OTHER_DOCUMENTS),
+    [DocType.TRANSCRIPTS]: countFor(DocType.TRANSCRIPTS),
+    [DocType.RECORDINGS]: countFor(DocType.RECORDINGS),
   };
 }
