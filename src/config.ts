@@ -1,15 +1,18 @@
 import 'dotenv/config';
 import { z } from 'zod';
 
-/**
- * All configuration comes from environment variables (loaded from .env by dotenv).
- * Settings are split by concern and validated on first use, so e.g. the scraper CLI
- * runs without Gmail or Anthropic credentials, but the poll loop fails fast without them.
- */
+export enum LogLevel {
+  TRACE = 'trace',
+  DEBUG = 'debug',
+  INFO = 'info',
+  WARN = 'warn',
+  ERROR = 'error',
+  FATAL = 'fatal',
+}
 
 const appSchema = z.object({
   HEADLESS: z.stringbool().default(true),
-  LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),
+  LOG_LEVEL: z.enum(LogLevel).default(LogLevel.INFO),
   LOG_PRETTY: z.stringbool().default(true),
 });
 
@@ -25,8 +28,6 @@ const llmSchema = z.object({
   ANTHROPIC_API_KEY: z.string().min(1),
   LLM_MODEL: z.string().default('claude-haiku-5-5'),
 });
-
-export type LogLevel = z.infer<typeof appSchema>['LOG_LEVEL'];
 
 export interface AppConfig {
   headless: boolean;
