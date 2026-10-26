@@ -8,7 +8,7 @@ Send it an email like:
 
 It replies with:
 
-- a ZIP of up to 10 documents from the requested tab,
+- a ZIP of up to 10 documents from the requested tab (for Recordings, which are ~300 MB audio files, the site's PDF list of recordings instead),
 - a short summary of the matter (title, type, category, dates, status, outcome),
 - the number of documents in each tab, and how many of the requested tab's documents were downloaded.
 
@@ -33,7 +33,9 @@ IMAP poll ─► parse request (LLM) ─► search + download (Playwright) ─�
 - **Deterministic scraping, LLM only at the edges.** The LLM handles the fuzzy parts (understanding the email, writing friendly prose). The browser steps are plain code, not an LLM deciding where to click. That makes them faster, cheaper, and repeatable.
 - **A real browser is required.** The site is a FileMaker WebDirect (Vaadin) app that talks to its server over a push channel. There's no JSON API to call directly.
 - **Verify the matter number.** If a search isn't committed properly, the site silently opens matter `M00001`. The scraper always checks that the matter shown matches the one requested (after normalizing case, spaces, and a missing `M`) and fails loudly otherwise.
-- **Virtualized document list.** Only about 9 rows exist in the DOM at once. The downloader processes the visible rows, de-duplicates by document number, scrolls, and repeats.
+- **Virtualized document list.** The list is a Vaadin grid that keeps only ~10 rows in the DOM and recycles them as you scroll. The downloader handles the rows on screen (sorted by position, since DOM order isn't reliable), remembers each row's text in a `Set` so nothing is fetched twice, scrolls the grid's own scrollbar element, and repeats. It stops at 10 files, at the end of the list, or when the next file would exceed the attachment budget.
+- **Downloads use the session-bound file URL, not the browser's download event.** Clicking a file opens a "Download Files" dialog (Transcripts and Recordings add an "Export Field to File" step first). The file button points a hidden iframe at a URL like `/fmi/webd/APP/connector/0/493/dl/102674.pdf`, which is fetched with the browser's cookies. Playwright's download event didn't fire for transcripts, so this single approach covers every tab.
+- **Recordings are listed, not downloaded.** One hearing recording is about 326 MB, far over any email limit. The agent lists the first 10 recordings and attaches the site's own "Save List" PDF of the tab.
 - **Header fields are read by FileMaker layout object number** (e.g. the `fm_object_286` class), not by position in the page text. The page text lists values and labels in different orders, and the on-screen "Type" and "Category" labels sit above each other's values. Dates are checked for the expected `MM/DD/YYYY` format and converted to ISO, so a layout change fails loudly instead of producing wrong data.
 - **"Not found" vs "something broke" are separate errors.** A nonexistent matter makes the site show a "No Records Found" dialog, which becomes a `MatterNotFoundError`. Timeouts and unexpected pages become a `ScrapeError`.
 - **Waits target specific content** (a tab label, the download dialog) rather than "page loaded" or "network idle", which never settle on this site.
@@ -76,7 +78,7 @@ npm run typecheck
 
 - [x] Project setup: config validation, logging
 - [x] Scraper: search, matter verification, metadata, tab counts
-- [ ] Downloader and ZIP
+- [x] Downloader and ZIP
 - [ ] Reply email
 - [ ] LLM request parsing
 - [ ] Inbox polling loop
@@ -84,7 +86,9 @@ npm run typecheck
 
 ## Known limitations
 
-- Downloads at most 10 documents per request; large recordings may be left out to fit the attachment limit.
+- Downloads at most 10 documents per request: the first 10 as the site lists them. The site's sort order varies by tab (some newest first, some oldest first).
+- Recordings are never downloaded; the reply lists them instead.
+- The site sometimes files the same PDF under two document numbers; both copies end up in the ZIP.
 - Requests are processed one at a time, so a burst of emails queues up.
 - Depends on the site's current layout. If labels or structure change, selectors in `src/site/constants.ts` need updating.
 - If the process crashes mid-request, that email gets no reply (by design, to avoid duplicates).

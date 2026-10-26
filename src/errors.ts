@@ -1,4 +1,3 @@
-/** The requested matter doesn't exist on the site. A user problem, not a bug. */
 export class MatterNotFoundError extends Error {
   readonly matterNumber: string;
 
@@ -9,7 +8,6 @@ export class MatterNotFoundError extends Error {
   }
 }
 
-/** The site behaved unexpectedly: timeout, wrong matter opened, layout changed. */
 export class ScrapeError extends Error {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
