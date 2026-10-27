@@ -65,3 +65,16 @@ export interface FetchResult extends MatterLookup {
   recordings: RecordingsListing | null;
   zip: SavedFile | null;
 }
+
+export enum ReplyKind {
+  RESULT = 'result',
+  NOT_FOUND = 'notFound',
+  ERROR = 'error',
+}
+
+export interface Reply {
+  kind: ReplyKind;
+  subject: string;
+  text: string;
+  attachment: SavedFile | null;
+}
