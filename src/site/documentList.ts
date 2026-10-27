@@ -118,15 +118,16 @@ async function readVisibleRows(page: Page): Promise<{ index: number; description
   return rendered
     .filter((row) => row.visible)
     .sort((a, b) => a.top - b.top)
-    .map(({ index, text }) => ({
-      index,
-      description: text.replace(LIST.buttonLabels, ' ').replace(/\s+/g, ' ').trim(),
-    }));
+    .map(({ index, text }) => ({ index, description: rowDescription(text) }));
+}
+
+export function rowDescription(rowText: string): string {
+  return rowText.replace(LIST.buttonLabels, ' ').replace(/\s+/g, ' ').trim();
 }
 
 // Captions are usually the row's ID ("102674.pdf", "D-1.pdf"). If that ID isn't in the clicked row,
 // the site served a different document. Captions containing spaces (transcripts) aren't IDs.
-function isDifferentDocument(fileName: string, description: string): boolean {
+export function isDifferentDocument(fileName: string, description: string): boolean {
   const id = path.parse(fileName).name;
   return !/\s/.test(id) && !description.includes(id);
 }
