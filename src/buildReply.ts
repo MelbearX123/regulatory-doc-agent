@@ -10,7 +10,7 @@ export async function buildReply(request: MatterRequest, outputDir: string): Pro
     return composeResultReply(await fetchMatter(request, outputDir));
   } catch (err) {
     if (err instanceof MatterNotFoundError) {
-      logger.warn({ ...request }, err.message);
+      logger.warn(request, err.message);
       return composeNotFoundReply(request);
     }
     logger.error({ err, ...request }, 'Fetch failed; replying with an apology');

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeMatterNumber, requestSlug } from './request';
+import { findMatterNumbers, normalizeMatterNumber, requestSlug } from './request';
 import { DocType } from './types';
 
 describe('normalizeMatterNumber', () => {
@@ -16,6 +16,16 @@ describe('normalizeMatterNumber', () => {
 
   it.each(['M123', 'M123456', 'X12205', 'M1220a', ''])('rejects %j', (input) => {
     expect(normalizeMatterNumber(input)).toBeNull();
+  });
+});
+
+describe('findMatterNumbers', () => {
+  it('finds each matter number once, in canonical form', () => {
+    expect(findMatterNumbers('m 12205 and M-10431, also M12205 again')).toEqual(['M12205', 'M10431']);
+  });
+
+  it('ignores numbers without an M and numbers that are too long', () => {
+    expect(findMatterNumbers('12205 or M123456')).toEqual([]);
   });
 });
 
