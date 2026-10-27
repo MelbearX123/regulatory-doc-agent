@@ -13,7 +13,7 @@ export enum LogLevel {
 const appSchema = z.object({
   HEADLESS: z.stringbool().default(true),
   LOG_LEVEL: z.enum(LogLevel).default(LogLevel.INFO),
-  LOG_PRETTY: z.stringbool().default(true),
+  LOG_PRETTY: z.stringbool().default(false),
 });
 
 const emailSchema = z.object({
