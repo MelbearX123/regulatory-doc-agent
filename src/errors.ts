@@ -1,10 +1,7 @@
 export class MatterNotFoundError extends Error {
-  readonly matterNumber: string;
-
   constructor(matterNumber: string) {
     super(`Matter ${matterNumber} was not found`);
     this.name = 'MatterNotFoundError';
-    this.matterNumber = matterNumber;
   }
 }
 

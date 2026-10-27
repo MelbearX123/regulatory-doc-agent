@@ -1,15 +1,12 @@
 import path from 'node:path';
 import { logger } from './logger';
+import { requestSlug } from './request';
 import { withBrowser } from './site/browser';
 import { downloadDocuments, listRecordings, openTab } from './site/documentList';
 import { readMetadata, readTabCounts } from './site/metadata';
 import { openMatter } from './site/search';
 import { DocType, type FetchResult, type MatterRequest } from './types';
 import { zipFiles } from './zip';
-
-export function requestSlug({ matterNumber, docType }: MatterRequest): string {
-  return `${matterNumber}-${docType.toLowerCase().replace(/\s+/g, '-')}`;
-}
 
 export async function fetchMatter(request: MatterRequest, outputDir: string): Promise<FetchResult> {
   const { matterNumber, docType } = request;

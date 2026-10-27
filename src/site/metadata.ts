@@ -1,16 +1,16 @@
 import type { Page } from 'playwright';
 import { ScrapeError } from '../errors';
 import { DocType, DocTypeSchema, type MatterMetadata, type TabCounts } from '../types';
-import { HEADER_FIELDS, TAB_LABEL, layoutObjectSelector, type HeaderField } from './constants';
+import { HEADER_FIELDS, TAB_LABEL, headerFieldSelector, type HeaderField } from './constants';
 
 async function readHeaderField(page: Page, field: HeaderField): Promise<string | null> {
-  const element = page.locator(layoutObjectSelector(HEADER_FIELDS[field])).first();
+  const element = page.locator(headerFieldSelector(HEADER_FIELDS[field])).first();
   if ((await element.count()) === 0) return null;
   const text = (await element.innerText()).replace(/\s+/g, ' ').trim();
   return text || null;
 }
 
-function toIsoDate(value: string | null, field: HeaderField): string | null {
+export function toIsoDate(value: string | null, field: HeaderField): string | null {
   if (value === null) return null;
   const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
   if (!match) throw new ScrapeError(`Unexpected ${field} format: "${value}"`);
@@ -38,7 +38,10 @@ export async function readMetadata(page: Page): Promise<MatterMetadata> {
 }
 
 export async function readTabCounts(page: Page): Promise<TabCounts> {
-  const labels = await page.getByRole('button', { name: TAB_LABEL }).allInnerTexts();
+  return parseTabCounts(await page.getByRole('button', { name: TAB_LABEL }).allInnerTexts());
+}
+
+export function parseTabCounts(labels: string[]): TabCounts {
   const counts = new Map<DocType, number>();
   for (const label of labels) {
     const match = TAB_LABEL.exec(label.trim());

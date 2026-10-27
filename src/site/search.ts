@@ -1,6 +1,7 @@
 import type { Page } from 'playwright';
 import { MatterNotFoundError, ScrapeError } from '../errors';
 import { logger } from '../logger';
+import { normalizeMatterNumber } from '../request';
 import {
   HEADER_FIELDS,
   SEARCH,
@@ -8,15 +9,8 @@ import {
   TAB_LABEL,
   TIMEOUTS,
   TYPING_DELAY_MS,
-  layoutObjectSelector,
+  headerFieldSelector,
 } from './constants';
-
-const MATTER_NUMBER = /^M?[\s-]*(\d{5})$/i;
-
-export function normalizeMatterNumber(input: string): string | null {
-  const match = MATTER_NUMBER.exec(input.trim());
-  return match ? `M${match[1]}` : null;
-}
 
 export async function openMatter(page: Page, matterNumber: string): Promise<void> {
   logger.info({ matterNumber }, 'Opening search page');
@@ -45,7 +39,7 @@ export async function openMatter(page: Page, matterNumber: string): Promise<void
   }
 
   // A bad search can silently open M00001 instead of failing, so confirm we got the right matter.
-  const shownText = await page.locator(layoutObjectSelector(HEADER_FIELDS.matterNumber)).first().innerText();
+  const shownText = await page.locator(headerFieldSelector(HEADER_FIELDS.matterNumber)).first().innerText();
   const shown = normalizeMatterNumber(shownText);
   if (shown !== matterNumber) {
     throw new ScrapeError(`Asked for ${matterNumber} but the site opened "${shownText.trim()}"`);
