@@ -14,8 +14,8 @@ export const TIMEOUTS = {
 
 export const MAX_DOCUMENTS = 10;
 
-// Gmail's 25 MB limit applies after base64 encoding (+33%), so about 18 MB of raw files fit.
-export const ATTACHMENT_BUDGET_BYTES = 18 * 1024 * 1024;
+// Gmail's 25 MB limit applies after base64 encoding, which adds ~37% (a third plus line breaks).
+export const ATTACHMENT_BUDGET_BYTES = 17 * 1024 * 1024;
 
 export const MAX_CONSECUTIVE_FAILURES = 3;
 
