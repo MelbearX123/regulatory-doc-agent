@@ -23,14 +23,19 @@ IMAP poll ─► parse request (LLM) ─► search + download (Playwright) ─�
 ```
 
 1. **Read email.** A Gmail inbox is polled over IMAP. Unread messages are claimed (marked read) and handled one at a time.
-2. **Parse the request.** An LLM turns the free-form email into `{ matterNumber, docType }`. The output is validated with zod, and the matter number must also appear in the original email text. If something is missing or ambiguous, the agent replies asking for clarification.
+2. **Parse the request.** Claude Haiku 5.5 turns the free-form email into `{ matterNumber, docType, issue }` using structured output (a zod schema), so typos like "exibits" or "key docs" still work. Code then checks the answer: the matter number must actually appear in the email. If something is missing, there are several requests, or the email isn't a request, the agent replies asking for clarification.
 3. **Fetch documents.** Playwright drives a headless Chromium through the site: search the matter, confirm the right matter opened, read the metadata and tab counts, open the requested tab, and download up to 10 files.
 4. **ZIP.** Files are zipped while staying under Gmail's attachment limit; anything left out is mentioned in the reply.
-5. **Reply.** Code fills in all facts (title, dates, counts). The LLM only writes the connective prose around them, so it can't introduce numbers that weren't scraped.
+5. **Reply.** Code writes the reply from the scraped facts (title, dates, counts). The LLM then rewords it to read more naturally, and the rewrite is only used if it contains exactly the same numbers as the original.
 
 ## Design decisions
 
 - **Deterministic scraping, LLM only at the edges.** The LLM handles the fuzzy parts (understanding the email, writing friendly prose). The browser steps are plain code, not an LLM deciding where to click. That makes them faster, cheaper, and repeatable.
+- **The LLM's output is never trusted on its own.**
+  - **Matter numbers:** one only counts if its digits appear in the email, so an invented or "corrected" number can't trigger a fetch.
+  - **Unclear requests:** the LLM picks one problem from a fixed list (`noMatterNumber`, `noDocType`, `multipleRequests`, `notARequest`), and code writes the clarification reply. Nothing the model writes reaches the sender unchecked, which also limits what instructions hidden in an email can do.
+  - **Rewrites:** a reworded reply is rejected unless it contains exactly the same numbers (matter numbers, counts, dates, amounts) as the template.
+- **The agent works without the LLM.** If the API is down or the key is missing, a pattern-matching parser handles clearly worded requests, and the templated reply is sent unchanged.
 - **A real browser is required.** The site is a FileMaker WebDirect (Vaadin) app that talks to its server over a push channel. There's no JSON API to call directly.
 - **Verify the matter number.** If a search isn't committed properly, the site silently opens matter `M00001`. The scraper always checks that the matter shown matches the one requested (after normalizing case, spaces, and a missing `M`) and fails loudly otherwise.
 - **Virtualized document list.** The list is a Vaadin grid that keeps only a screenful of rows in the DOM and recycles them as you scroll. The downloader only clicks rows that are fully visible (clicking one below the fold makes the grid scroll mid-click, and a different document gets downloaded), remembers each row's text in a `Set` so nothing is fetched twice, then scrolls one screen minus a row and waits for the grid to redraw and settle before continuing. The browser window is tall enough that 10 rows fit without scrolling. As a safety net, a file whose ID (e.g. `102674` or `D-1`) isn't in the clicked row is rejected. It stops at 10 files, at the end of the list, or when the next file would exceed the attachment budget.
@@ -68,7 +73,10 @@ cp .env.example .env   # then fill in the values
 # Run the email agent (polls the inbox; not built yet, see Status)
 npm run dev
 
-# Fetch from the command line and print the reply that would be sent
+# Send the agent an email's text and print its reply (add --send you@example.com to email it)
+npm run ask -- "Hi Agent, can you give me Other Documents files from M12205? Thanks!"
+
+# Skip the LLM: fetch a matter and document type directly and print the reply
 npm run fetch -- M12205 "Other Documents"
 
 # Same, but also email the reply (with the ZIP attached) to an address
@@ -84,15 +92,15 @@ npm run typecheck
 npm test
 ```
 
-Unit tests (Vitest) cover the logic that doesn't need a browser: matter number parsing, every variant of the reply email, tab-count and date parsing, the wrong-document check, file naming, zipping, turning fetch errors into replies, and the email handed to a mocked nodemailer. They run in under a second, make no network calls, and never read the real Gmail credentials. Scraping the live site is checked by hand with `npm run fetch`.
+Unit tests (Vitest) cover the logic that doesn't need a browser: matter number parsing, every variant of the reply email, tab-count and date parsing, the wrong-document check, file naming, zipping, turning fetch errors into replies, the email handed to a mocked nodemailer, the checks on the LLM's answers (with the Anthropic client mocked), and the fallbacks when the LLM fails. They run in under a second, make no network calls, and never read the real credentials. Scraping the live site is checked by hand with `npm run fetch`.
 
 ## Status
 
 - [x] Project setup: config validation, logging
 - [x] Scraper: search, matter verification, metadata, tab counts
 - [x] Downloader and ZIP
-- [x] Reply email (templated; LLM-written prose comes with request parsing)
-- [ ] LLM request parsing
+- [x] Reply email
+- [x] LLM request parsing, clarification replies, and checked LLM rewording
 - [ ] Inbox polling loop
 - [ ] Docker deployment
 
@@ -101,6 +109,7 @@ Unit tests (Vitest) cover the logic that doesn't need a browser: matter number p
 - Downloads at most 10 documents per request: the first 10 as the site lists them. The site's sort order varies by tab (some newest first, some oldest first).
 - Recordings are never downloaded; the reply lists them instead.
 - The site sometimes files the same PDF under two document numbers; both copies end up in the ZIP.
+- The check on the LLM's reworded reply compares numbers only. A changed word fact (say, "Closed" becoming "Open") isn't caught by code; the prompt forbids it.
 - Rows are told apart by their text, so two rows with identical text count as one document.
 - If the site opens the wrong matter (its silent `M00001` fallback), the agent replies with an apology rather than retrying.
 - Requests are processed one at a time, so a burst of emails queues up.
