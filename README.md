@@ -40,6 +40,7 @@ IMAP poll ─► parse request (LLM) ─► search + download (Playwright) ─�
 - **"Not found" vs "something broke" are separate errors.** A nonexistent matter makes the site show a "No Records Found" dialog, which becomes a `MatterNotFoundError`. Timeouts and unexpected pages become a `ScrapeError`.
 - **Waits target specific content** (a tab label, the download dialog) rather than "page loaded" or "network idle", which never settle on this site.
 - **Attachment budget of 17 MB.** Gmail's 25 MB limit applies after base64 encoding, which adds about 37% (a third, plus line breaks).
+- **Every request gets a reply.** Fetch failures are turned into a reply rather than an exception: a "couldn't find that matter" reply for unknown matter numbers, and an apology for anything else. The reply text is built by plain code from the scraped facts, so it also works as the fallback if the LLM is unavailable.
 - **At-most-once processing.** Emails are marked read when claimed, so a crash can't cause duplicate replies. The agent ignores mail from itself and from auto-responders to avoid reply loops.
 - **Site-specific selectors live in one file** (`src/site/constants.ts`), so a site change means one place to fix.
 
@@ -67,8 +68,11 @@ cp .env.example .env   # then fill in the values
 # Run the email agent (polls the inbox; not built yet, see Status)
 npm run dev
 
-# Fetch from the command line: matter number + document type
+# Fetch from the command line and print the reply that would be sent
 npm run fetch -- M12205 "Other Documents"
+
+# Same, but also email the reply (with the ZIP attached) to an address
+npm run fetch -- M12205 "Other Documents" --send you@example.com
 
 # Type-check
 npm run typecheck
@@ -79,7 +83,7 @@ npm run typecheck
 - [x] Project setup: config validation, logging
 - [x] Scraper: search, matter verification, metadata, tab counts
 - [x] Downloader and ZIP
-- [ ] Reply email
+- [x] Reply email (templated; LLM-written prose comes with request parsing)
 - [ ] LLM request parsing
 - [ ] Inbox polling loop
 - [ ] Docker deployment
