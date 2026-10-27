@@ -9,6 +9,7 @@ export const TIMEOUTS = {
   tabLoad: 20_000,
   dialog: 30_000,
   fileFetch: 120_000,
+  scrollRedraw: 10_000,
   scrollSettle: 1_500,
 } as const;
 
@@ -57,6 +58,7 @@ export function tabButtonName(docType: DocType): RegExp {
 
 export const LIST = {
   row: 'tr.v-grid-row-has-data',
+  viewport: '.v-grid-tablewrapper',
   // The grid scrolls through this separate scrollbar element, not a parent container.
   scroller: '.v-grid-scroller-vertical',
   goGetIt: /GO GET IT/i,
