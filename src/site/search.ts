@@ -1,6 +1,7 @@
 import type { Page } from 'playwright';
 import { MatterNotFoundError, ScrapeError } from '../errors';
 import { logger } from '../logger';
+import { normalizeMatterNumber } from '../request';
 import {
   HEADER_FIELDS,
   SEARCH,
@@ -10,13 +11,6 @@ import {
   TYPING_DELAY_MS,
   headerFieldSelector,
 } from './constants';
-
-const MATTER_NUMBER = /^M?[\s-]*(\d{5})$/i;
-
-export function normalizeMatterNumber(input: string): string | null {
-  const match = MATTER_NUMBER.exec(input.trim());
-  return match ? `M${match[1]}` : null;
-}
 
 export async function openMatter(page: Page, matterNumber: string): Promise<void> {
   logger.info({ matterNumber }, 'Opening search page');

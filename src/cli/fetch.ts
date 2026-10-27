@@ -1,10 +1,10 @@
 import { mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { MatterNotFoundError } from '../errors';
-import { fetchMatter, requestSlug } from '../fetchMatter';
+import { fetchMatter } from '../fetchMatter';
 import { logger } from '../logger';
+import { normalizeMatterNumber, requestSlug } from '../request';
 import { ATTACHMENT_BUDGET_BYTES } from '../site/constants';
-import { normalizeMatterNumber } from '../site/search';
 import { DOC_TYPES, StopReason, type DocType, type FetchResult } from '../types';
 
 const USAGE = [
