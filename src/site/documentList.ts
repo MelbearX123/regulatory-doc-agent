@@ -2,15 +2,7 @@ import path from 'node:path';
 import type { Locator, Page } from 'playwright';
 import { ScrapeError } from '../errors';
 import { logger } from '../logger';
-import {
-  StopReason,
-  type DocType,
-  type DocumentRow,
-  type DownloadedDocument,
-  type DownloadOutcome,
-  type RecordingsListing,
-  type SavedFile,
-} from '../types';
+import { StopReason, type DocType, type DownloadOutcome, type RecordingsListing, type SavedFile } from '../types';
 import {
   ATTACHMENT_BUDGET_BYTES,
   LIST,
@@ -21,7 +13,7 @@ import {
 } from './constants';
 import { dismissDialogs, fetchListFile, fetchRowFile, saveFetchedFile, type FetchedFile } from './download';
 
-type RowVisitor = (row: DocumentRow, element: Locator) => Promise<StopReason | null>;
+type RowVisitor = (description: string, element: Locator) => Promise<StopReason | null>;
 
 export async function openTab(page: Page, docType: DocType): Promise<void> {
   await page.getByRole('button', { name: tabButtonName(docType) }).click();
@@ -31,23 +23,23 @@ export async function openTab(page: Page, docType: DocType): Promise<void> {
 
 export async function downloadDocuments(page: Page, tabCount: number, outputDir: string): Promise<DownloadOutcome> {
   const target = Math.min(tabCount, MAX_DOCUMENTS);
-  const documents: DownloadedDocument[] = [];
+  const documents: SavedFile[] = [];
   let totalBytes = 0;
   let failedCount = 0;
   let consecutiveFailures = 0;
 
-  const stopReason = await visitRows(page, async (row, element) => {
+  const stopReason = await visitRows(page, async (description, element) => {
     let file: FetchedFile;
     try {
       file = await fetchRowFile(page, element);
-      if (isDifferentDocument(file.fileName, row.description)) {
-        throw new ScrapeError(`Clicked "${row.description}" but the site served ${file.fileName}`);
+      if (isDifferentDocument(file.fileName, description)) {
+        throw new ScrapeError(`Clicked "${description}" but the site served ${file.fileName}`);
       }
       consecutiveFailures = 0;
     } catch (err) {
       failedCount++;
       consecutiveFailures++;
-      logger.warn({ err, row: row.description }, 'Download failed; skipping this row');
+      logger.warn({ err, row: description }, 'Download failed; skipping this row');
       await dismissDialogs(page);
       if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
         throw new ScrapeError(`${consecutiveFailures} downloads failed in a row`, { cause: err });
@@ -61,7 +53,7 @@ export async function downloadDocuments(page: Page, tabCount: number, outputDir:
     }
     const saved = await saveFetchedFile(file, outputDir);
     totalBytes += saved.sizeBytes;
-    documents.push({ ...saved, row });
+    documents.push(saved);
     logger.info(
       { fileName: saved.fileName, kb: Math.round(saved.sizeBytes / 1024), progress: `${documents.length}/${target}` },
       'Downloaded',
@@ -85,12 +77,12 @@ export async function listRecordings(page: Page, outputDir: string): Promise<Rec
     await dismissDialogs(page);
   }
 
-  const rows: DocumentRow[] = [];
-  await visitRows(page, async (row) => {
-    rows.push(row);
-    return rows.length >= MAX_DOCUMENTS ? StopReason.LIMIT : null;
+  const titles: string[] = [];
+  await visitRows(page, async (description) => {
+    titles.push(description);
+    return titles.length >= MAX_DOCUMENTS ? StopReason.LIMIT : null;
   });
-  return { rows, listFile };
+  return { titles, listFile };
 }
 
 // The grid is virtualized: rows scrolled out of view are removed from the DOM,
@@ -98,10 +90,10 @@ export async function listRecordings(page: Page, outputDir: string): Promise<Rec
 async function visitRows(page: Page, visit: RowVisitor): Promise<StopReason> {
   const seen = new Set<string>();
   do {
-    for (const { index, row } of await readVisibleRows(page)) {
-      if (!row.description || seen.has(row.description)) continue;
-      seen.add(row.description);
-      const stop = await visit(row, page.locator(LIST.row).nth(index));
+    for (const { index, description } of await readVisibleRows(page)) {
+      if (!description || seen.has(description)) continue;
+      seen.add(description);
+      const stop = await visit(description, page.locator(LIST.row).nth(index));
       if (stop) return stop;
     }
   } while (await scrollDown(page));
@@ -111,7 +103,7 @@ async function visitRows(page: Page, visit: RowVisitor): Promise<StopReason> {
 // Only rows fully inside the grid's viewport are returned: clicking a row below it makes the grid
 // scroll and recycle its <tr> elements mid-click, so the click lands on a different document.
 // The grid also recycles rows out of DOM order, so they're sorted by on-screen position.
-async function readVisibleRows(page: Page): Promise<{ index: number; row: DocumentRow }[]> {
+async function readVisibleRows(page: Page): Promise<{ index: number; description: string }[]> {
   const rendered = await page.evaluate(
     ({ rowSelector, viewportSelector }) => {
       const viewport = document.querySelector(viewportSelector)?.getBoundingClientRect();
@@ -126,7 +118,10 @@ async function readVisibleRows(page: Page): Promise<{ index: number; row: Docume
   return rendered
     .filter((row) => row.visible)
     .sort((a, b) => a.top - b.top)
-    .map(({ index, text }) => ({ index, row: toDocumentRow(text) }));
+    .map(({ index, text }) => ({
+      index,
+      description: text.replace(LIST.buttonLabels, ' ').replace(/\s+/g, ' ').trim(),
+    }));
 }
 
 // Captions are usually the row's ID ("102674.pdf", "D-1.pdf"). If that ID isn't in the clicked row,
@@ -134,11 +129,6 @@ async function readVisibleRows(page: Page): Promise<{ index: number; row: Docume
 function isDifferentDocument(fileName: string, description: string): boolean {
   const id = path.parse(fileName).name;
   return !/\s/.test(id) && !description.includes(id);
-}
-
-function toDocumentRow(text: string): DocumentRow {
-  const description = text.replace(LIST.buttonLabels, ' ').replace(/\s+/g, ' ').trim();
-  return { description, docNumber: LIST.docNumber.exec(description)?.[1] ?? null };
 }
 
 async function scrollDown(page: Page): Promise<boolean> {

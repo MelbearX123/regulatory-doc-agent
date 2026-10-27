@@ -36,19 +36,10 @@ export interface MatterLookup {
   tabCounts: TabCounts;
 }
 
-export interface DocumentRow {
-  description: string;
-  docNumber: string | null;
-}
-
 export interface SavedFile {
   fileName: string;
   filePath: string;
   sizeBytes: number;
-}
-
-export interface DownloadedDocument extends SavedFile {
-  row: DocumentRow;
 }
 
 export enum StopReason {
@@ -58,13 +49,13 @@ export enum StopReason {
 }
 
 export interface DownloadOutcome {
-  documents: DownloadedDocument[];
+  documents: SavedFile[];
   failedCount: number;
   stopReason: StopReason;
 }
 
 export interface RecordingsListing {
-  rows: DocumentRow[];
+  titles: string[];
   listFile: SavedFile | null;
 }
 

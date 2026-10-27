@@ -64,7 +64,6 @@ export const LIST = {
   goGetIt: /GO GET IT/i,
   saveList: /Save List/i,
   buttonLabels: /\b(Preview|GO GET IT)\b/g,
-  docNumber: /\b(\d{5,6})\b/,
 } as const;
 
 export const DIALOGS = {

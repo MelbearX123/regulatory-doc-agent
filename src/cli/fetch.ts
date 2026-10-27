@@ -39,10 +39,10 @@ function formatFiles(result: FetchResult): string[] {
   if (total === 0) return [`  No ${docType} in this matter; nothing to download.`];
 
   if (result.recordings) {
-    const { rows, listFile } = result.recordings;
+    const { titles, listFile } = result.recordings;
     return [
-      `  ${total} Recordings, not downloaded (audio files are too large to email). First ${rows.length}:`,
-      ...rows.map((row) => `    - ${row.description}`),
+      `  ${total} Recordings, not downloaded (audio files are too large to email). First ${titles.length}:`,
+      ...titles.map((title) => `    - ${title}`),
       listFile ? `  Recordings list: ${listFile.filePath} (${formatSize(listFile.sizeBytes)})` : '  Recordings list PDF: unavailable',
     ];
   }
@@ -51,7 +51,7 @@ function formatFiles(result: FetchResult): string[] {
   const { documents, failedCount, stopReason } = result.download;
   const lines = [
     `  Downloaded ${documents.length} of ${total} ${docType}${documents.length < total ? ' (first as listed on the site)' : ''}:`,
-    ...documents.map((doc) => `    - ${doc.fileName} (${formatSize(doc.sizeBytes)})  ${doc.row.description}`),
+    ...documents.map((doc) => `    - ${doc.fileName} (${formatSize(doc.sizeBytes)})`),
   ];
   if (stopReason === StopReason.SIZE_BUDGET) {
     lines.push(`  Stopped early: the next file would exceed the ${formatSize(ATTACHMENT_BUDGET_BYTES)} email budget.`);
