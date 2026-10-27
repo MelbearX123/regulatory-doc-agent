@@ -1,10 +1,10 @@
 import type { Page } from 'playwright';
 import { ScrapeError } from '../errors';
 import { DocType, DocTypeSchema, type MatterMetadata, type TabCounts } from '../types';
-import { HEADER_FIELDS, TAB_LABEL, layoutObjectSelector, type HeaderField } from './constants';
+import { HEADER_FIELDS, TAB_LABEL, headerFieldSelector, type HeaderField } from './constants';
 
 async function readHeaderField(page: Page, field: HeaderField): Promise<string | null> {
-  const element = page.locator(layoutObjectSelector(HEADER_FIELDS[field])).first();
+  const element = page.locator(headerFieldSelector(HEADER_FIELDS[field])).first();
   if ((await element.count()) === 0) return null;
   const text = (await element.innerText()).replace(/\s+/g, ' ').trim();
   return text || null;

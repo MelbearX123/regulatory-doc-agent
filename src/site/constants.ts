@@ -43,9 +43,10 @@ export const HEADER_FIELDS = {
 
 export type HeaderField = keyof typeof HEADER_FIELDS;
 
-// Data fields have an `fm_object_N` class; text objects like the title only have an id (b0p0o290i0i0r1).
-export function layoutObjectSelector(objectId: number): string {
-  return `.fm_object_${objectId}, [id^="b0p0o${objectId}i"]`;
+// Header ids look like b0p0o290i0i0r1, where p0 is the header panel. The document list (p1)
+// reuses some object numbers, so an unscoped `fm_object_N` class could match list elements.
+export function headerFieldSelector(objectId: number): string {
+  return `[id^="b0p0o${objectId}i"]`;
 }
 
 export const TAB_LABEL = new RegExp(`^(${DOC_TYPES.join('|')}) - (\\d+)$`);
