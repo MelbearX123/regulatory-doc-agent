@@ -78,6 +78,14 @@ npm run fetch -- M12205 "Other Documents" --send you@example.com
 npm run typecheck
 ```
 
+## Testing
+
+```bash
+npm test
+```
+
+Unit tests (Vitest) cover the logic that doesn't need a browser: matter number parsing, every variant of the reply email, tab-count and date parsing, the wrong-document check, file naming, zipping, turning fetch errors into replies, and the email handed to a mocked nodemailer. They run in under a second, make no network calls, and never read the real Gmail credentials. Scraping the live site is checked by hand with `npm run fetch`.
+
 ## Status
 
 - [x] Project setup: config validation, logging
@@ -98,4 +106,4 @@ npm run typecheck
 - Requests are processed one at a time, so a burst of emails queues up.
 - Depends on the site's current layout. If labels or structure change, selectors in `src/site/constants.ts` need updating.
 - If the process crashes mid-request, that email gets no reply (by design, to avoid duplicates).
-- No automated test suite; behaviour is checked by running the CLI against real matters (existing, nonexistent, and malformed input).
+- No automated tests against the live site; the scraper is checked by running the CLI against real matters (existing, nonexistent, and malformed input).
