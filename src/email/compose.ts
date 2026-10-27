@@ -1,7 +1,9 @@
 import {
   DOC_TYPES,
+  ExtractionIssue,
   ReplyKind,
   StopReason,
+  type ClarificationIssue,
   type DocType,
   type FetchResult,
   type MatterMetadata,
@@ -47,6 +49,29 @@ export function composeErrorReply(request: MatterRequest): Reply {
     text: letter([
       `Sorry, something went wrong on my end while fetching ${request.docType} for ${request.matterNumber}. ` +
         'Please try again in a little while.',
+    ]),
+    attachment: null,
+  };
+}
+
+const CLARIFICATIONS: Record<ClarificationIssue, string> = {
+  [ExtractionIssue.NO_MATTER_NUMBER]:
+    "I couldn't find a matter number in your email. Matter numbers are an M followed by 5 digits, for example M12205.",
+  [ExtractionIssue.NO_DOC_TYPE]: `Which documents would you like? I can fetch ${joinList(DOC_TYPES, 'or')}.`,
+  [ExtractionIssue.MULTIPLE_REQUESTS]:
+    'I can handle one matter and one document type per email. Could you send each request separately?',
+  [ExtractionIssue.NOT_A_REQUEST]:
+    'I can send you documents from the UARB public database. Tell me a matter number and which documents ' +
+    `you want: ${joinList(DOC_TYPES, 'or')}.`,
+};
+
+export function composeClarificationReply(issue: ClarificationIssue): Reply {
+  return {
+    kind: ReplyKind.CLARIFICATION,
+    subject: 'Your document request',
+    text: letter([
+      CLARIFICATIONS[issue],
+      'For example: "Can you send me the Other Documents from M12205?"',
     ]),
     attachment: null,
   };
@@ -149,7 +174,7 @@ function withArticle(word: string): string {
   return `${/^[aeiou]/i.test(word) ? 'an' : 'a'} ${word}`;
 }
 
-function joinList(items: string[], conjunction: 'and' | 'or'): string {
+function joinList(items: readonly string[], conjunction: 'and' | 'or'): string {
   if (items.length <= 1) return items.join('');
   if (items.length === 2) return `${items[0]} ${conjunction} ${items[1]}`;
   return `${items.slice(0, -1).join(', ')}, ${conjunction} ${items.at(-1)}`;

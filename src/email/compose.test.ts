@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { M12205_METADATA, documentsResult, savedFile, tabCounts } from '../testFixtures';
-import { DocType, ReplyKind, StopReason, type FetchResult } from '../types';
-import { AGENT_NAME, composeErrorReply, composeNotFoundReply, composeResultReply } from './compose';
+import { DocType, ExtractionIssue, ReplyKind, StopReason, type ClarificationIssue, type FetchResult } from '../types';
+import {
+  AGENT_NAME,
+  composeClarificationReply,
+  composeErrorReply,
+  composeNotFoundReply,
+  composeResultReply,
+} from './compose';
 
 const request = { matterNumber: 'M12205', docType: DocType.EXHIBITS };
 
@@ -126,6 +132,20 @@ describe('composeResultReply', () => {
     });
     const result: FetchResult = { ...documentsResult(DocType.EXHIBITS, 0), tabCounts: empty, download: null };
     expect(composeResultReply(result).text).toContain('This matter has no documents in any tab.');
+  });
+});
+
+describe('composeClarificationReply', () => {
+  it.each<[ClarificationIssue, string]>([
+    [ExtractionIssue.NO_MATTER_NUMBER, "I couldn't find a matter number in your email."],
+    [ExtractionIssue.NO_DOC_TYPE, 'I can fetch Exhibits, Key Documents, Other Documents, Transcripts, or Recordings.'],
+    [ExtractionIssue.MULTIPLE_REQUESTS, 'one matter and one document type per email'],
+  ])('explains %s with an example request', (issue, sentence) => {
+    const reply = composeClarificationReply(issue);
+    expect(reply.kind).toBe(ReplyKind.CLARIFICATION);
+    expect(reply.text).toContain(sentence);
+    expect(reply.text).toContain('For example: "Can you send me the Other Documents from M12205?"');
+    expect(reply.attachment).toBeNull();
   });
 });
 
