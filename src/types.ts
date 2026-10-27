@@ -66,10 +66,28 @@ export interface FetchResult extends MatterLookup {
   zip: SavedFile | null;
 }
 
+export interface EmailContent {
+  subject: string;
+  text: string;
+}
+
+export enum ExtractionIssue {
+  NONE = 'none',
+  NO_MATTER_NUMBER = 'noMatterNumber',
+  NO_DOC_TYPE = 'noDocType',
+  MULTIPLE_REQUESTS = 'multipleRequests',
+  NOT_A_REQUEST = 'notARequest',
+}
+
+export type ClarificationIssue = Exclude<ExtractionIssue, ExtractionIssue.NONE>;
+
+export type ParseResult = { ok: true; request: MatterRequest } | { ok: false; issue: ClarificationIssue };
+
 export enum ReplyKind {
   RESULT = 'result',
   NOT_FOUND = 'notFound',
   ERROR = 'error',
+  CLARIFICATION = 'clarification',
 }
 
 export interface Reply {

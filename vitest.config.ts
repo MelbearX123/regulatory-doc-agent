@@ -9,6 +9,8 @@ export default defineConfig({
       LOG_PRETTY: 'false',
       GMAIL_ADDRESS: 'agent@example.com',
       GMAIL_APP_PASSWORD: 'test-password',
+      ANTHROPIC_API_KEY: 'test-key',
+      LLM_MODEL: 'test-model',
     },
   },
 });
