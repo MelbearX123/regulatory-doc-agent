@@ -23,11 +23,19 @@ export async function fetchListFile(page: Page): Promise<FetchedFile> {
   return fetchFromDownloadDialog(page);
 }
 
+// Two documents can share a caption, so a taken name gets " (2)", " (3)"... instead of being overwritten.
 export async function saveFetchedFile(file: FetchedFile, dir: string): Promise<SavedFile> {
-  const fileName = file.fileName.replace(UNSAFE_FILENAME_CHARS, '_');
-  const filePath = path.join(dir, fileName);
-  await writeFile(filePath, file.data);
-  return { fileName, filePath, sizeBytes: file.data.length };
+  const { name, ext } = path.parse(file.fileName.replace(UNSAFE_FILENAME_CHARS, '_'));
+  for (let copy = 1; ; copy++) {
+    const fileName = copy === 1 ? `${name}${ext}` : `${name} (${copy})${ext}`;
+    const filePath = path.join(dir, fileName);
+    try {
+      await writeFile(filePath, file.data, { flag: 'wx' });
+      return { fileName, filePath, sizeBytes: file.data.length };
+    } catch (err) {
+      if (!(err instanceof Error && 'code' in err && err.code === 'EEXIST')) throw err;
+    }
+  }
 }
 
 export async function dismissDialogs(page: Page): Promise<void> {
