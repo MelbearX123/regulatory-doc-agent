@@ -17,12 +17,12 @@ Supported document types: **Exhibits, Key Documents, Other Documents, Transcript
 ## How it works
 
 ```
-IMAP poll ─► parse request (LLM) ─► search + download (Playwright) ─► ZIP ─► write reply (LLM + template) ─► SMTP
+IMAP IDLE ─► parse request (LLM) ─► search + download (Playwright) ─► ZIP ─► write reply (LLM + template) ─► SMTP
                  │ unclear request                    │ failure
                  └──► asks for clarification          └──► apologetic error reply
 ```
 
-1. **Read email.** A Gmail inbox is polled over IMAP. Unread messages are claimed (marked read) and handled one at a time.
+1. **Read email.** The agent keeps one IMAP connection open to the Gmail inbox, and Gmail pushes a notification within a couple of seconds of mail arriving (IMAP IDLE). A backup check runs every 5 minutes. Unread messages are claimed (marked read) and handled one at a time. Mail from the agent itself, no-reply addresses and auto-responders is ignored, quoted text from earlier emails is stripped, and the reply goes back to the sender in the same thread.
 2. **Parse the request.** Claude Haiku 5.5 turns the free-form email into `{ matterNumber, docType, issue }` using structured output (a zod schema), so typos like "exibits" or "key docs" still work. Code then checks the answer: the matter number must actually appear in the email. If something is missing, there are several requests, or the email isn't a request, the agent replies asking for clarification.
 3. **Fetch documents.** Playwright drives a headless Chromium through the site: search the matter, confirm the right matter opened, read the metadata and tab counts, open the requested tab, and download up to 10 files.
 4. **ZIP.** Files are zipped while staying under Gmail's attachment limit; anything left out is mentioned in the reply.
@@ -46,7 +46,12 @@ IMAP poll ─► parse request (LLM) ─► search + download (Playwright) ─�
 - **Waits target specific content** (a tab label, the download dialog) rather than "page loaded" or "network idle", which never settle on this site.
 - **Attachment budget of 17 MB.** Gmail's 25 MB limit applies after base64 encoding, which adds about 37% (a third, plus line breaks).
 - **Every request gets a reply.** Fetch failures are turned into a reply rather than an exception: a "couldn't find that matter" reply for unknown matter numbers, and an apology for anything else. The reply text is built by plain code from the scraped facts, so it also works as the fallback if the LLM is unavailable.
-- **At-most-once processing.** Emails are marked read when claimed, so a crash can't cause duplicate replies. The agent ignores mail from itself and from auto-responders to avoid reply loops.
+- **IMAP IDLE instead of polling.** Gmail tells the agent about new mail within a couple of seconds, with almost no traffic while the inbox is quiet. A slow backup sweep catches anything a missed notification skipped.
+- **At-most-once processing.** Emails are marked read when claimed, so a crash can't cause duplicate replies.
+- **Crash-only recovery.** If the mail connection drops or anything unexpected happens, the process finishes its current email and exits; a restart policy (Docker's `restart: unless-stopped` in deployment) starts a fresh one, whose first sweep picks up anything missed. There's no reconnect logic to get wrong.
+- **Nothing can freeze the agent.** Emails are handled one at a time, so every step has a limit: the browser is force-closed after 3 minutes (which fails every pending page action and file fetch, giving an apology reply), LLM calls time out after 20 seconds, and sending times out after a minute.
+- **No reply loops.** Mail from the agent itself, no-reply addresses, auto-replies and mailing lists is ignored, and no sender gets more than 5 replies an hour, in case another bot sets none of the usual headers. Replies only ever go to the `From` address, never `Reply-To`, so nobody can make the agent mail a third party.
+- **Follow-ups work.** Quoted text from earlier emails is stripped before parsing, and the body of an email wins over its subject, so "now the Exhibits please" in reply to a result email fetches the Exhibits for the same matter.
 - **Site-specific selectors live in one file** (`src/site/constants.ts`), so a site change means one place to fix.
 
 ## Setup
@@ -64,13 +69,13 @@ cp .env.example .env   # then fill in the values
 | `HEADLESS` | `false` to watch the browser while debugging |
 | `LOG_LEVEL` / `LOG_PRETTY` | Log verbosity; `LOG_PRETTY=true` for readable local logs (needs dev dependencies), off by default for JSON lines |
 | `GMAIL_ADDRESS` / `GMAIL_APP_PASSWORD` | Inbox the agent reads and replies from |
-| `POLL_INTERVAL_MS` | How often to check for new mail |
+| `MAIL_SWEEP_INTERVAL_MS` | How often the backup check for missed mail runs (default 5 minutes; new mail normally arrives instantly) |
 | `ANTHROPIC_API_KEY` / `LLM_MODEL` | LLM used for parsing and reply prose (default `claude-haiku-5-5`) |
 
 ## Usage
 
 ```bash
-# Run the email agent (polls the inbox; not built yet, see Status)
+# Run the email agent: watches the inbox and answers requests until stopped (Ctrl+C)
 npm run dev
 
 # Send the agent an email's text and print its reply (add --send you@example.com to email it)
@@ -92,7 +97,7 @@ npm run typecheck
 npm test
 ```
 
-Unit tests (Vitest) cover the logic that doesn't need a browser: matter number parsing, every variant of the reply email, tab-count and date parsing, the wrong-document check, file naming, zipping, turning fetch errors into replies, the email handed to a mocked nodemailer, the checks on the LLM's answers (with the Anthropic client mocked), and the fallbacks when the LLM fails. They run in under a second, make no network calls, and never read the real credentials. Scraping the live site is checked by hand with `npm run fetch`.
+Unit tests (Vitest) cover the logic that doesn't need a browser: matter number parsing, every variant of the reply email, tab-count and date parsing, the wrong-document check, file naming, zipping, turning fetch errors into replies, the email handed to a mocked nodemailer, the checks on the LLM's answers (with the Anthropic client mocked), the fallbacks when the LLM fails, and the inbox side: which mail is ignored, quote stripping, threading, the reply limit, and the one-at-a-time sweep. They run in under a second, make no network calls, and never read the real credentials. Scraping the live site is checked by hand with `npm run fetch`.
 
 ## Status
 
@@ -101,7 +106,7 @@ Unit tests (Vitest) cover the logic that doesn't need a browser: matter number p
 - [x] Downloader and ZIP
 - [x] Reply email
 - [x] LLM request parsing, clarification replies, and checked LLM rewording
-- [ ] Inbox polling loop
+- [x] Inbox listener (IMAP IDLE)
 - [ ] Docker deployment
 
 ## Known limitations
@@ -114,5 +119,7 @@ Unit tests (Vitest) cover the logic that doesn't need a browser: matter number p
 - If the site opens the wrong matter (its silent `M00001` fallback), the agent replies with an apology rather than retrying.
 - Requests are processed one at a time, so a burst of emails queues up.
 - Depends on the site's current layout. If labels or structure change, selectors in `src/site/constants.ts` need updating.
-- If the process crashes mid-request, that email gets no reply (by design, to avoid duplicates).
+- If the process crashes or is stopped mid-request, that email gets no reply (by design, to avoid duplicates).
+- The 5-replies-an-hour limit is kept in memory, so it resets when the process restarts. Gmail's own sending limit (about 500 a day) is the backstop.
+- Run exactly one copy of the agent per inbox; two copies could both claim the same email.
 - No automated tests against the live site; the scraper is checked by running the CLI against real matters (existing, nonexistent, and malformed input).
