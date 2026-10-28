@@ -85,6 +85,11 @@ export function getEmailConfig(): EmailConfig {
 
 let llmConfig: LlmConfig | undefined;
 
+// The LLM is optional: without a key the agent uses its pattern-matching fallbacks.
+export function isLlmConfigured(): boolean {
+  return llmSchema.safeParse(process.env).success;
+}
+
 export function getLlmConfig(): LlmConfig {
   if (!llmConfig) {
     const env = parseEnv(llmSchema, 'LLM');

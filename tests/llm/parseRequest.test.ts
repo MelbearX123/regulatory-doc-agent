@@ -83,4 +83,11 @@ describe('parseRequest', () => {
     mockAskForJson.mockRejectedValue(new Error('network down'));
     expect(await parseRequest({ subject: 'Other Documents for M12205', text: 'Thanks!' })).toEqual(OK_REQUEST);
   });
+
+  it('skips the LLM entirely when no API key is configured', async () => {
+    vi.stubEnv('ANTHROPIC_API_KEY', '');
+    expect(await parseRequest({ subject: '', text: EMAIL })).toEqual(OK_REQUEST);
+    expect(mockAskForJson).not.toHaveBeenCalled();
+    vi.unstubAllEnvs();
+  });
 });

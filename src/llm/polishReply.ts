@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { AGENT_NAME } from '../email/compose';
+import { isLlmConfigured } from '../core/config';
 import { logger } from '../core/logger';
+import { AGENT_NAME } from '../email/compose';
 import { ReplyKind, type Reply } from '../core/types';
 import { askForJson } from './client';
 
@@ -17,7 +18,7 @@ Rules:
 Return only the rewritten email body.`;
 
 export async function polishReply(reply: Reply): Promise<Reply> {
-  if (reply.kind !== ReplyKind.RESULT) return reply;
+  if (reply.kind !== ReplyKind.RESULT || !isLlmConfigured()) return reply;
   try {
     const rewritten = (await askForJson(RewriteSchema, SYSTEM_PROMPT, reply.text)).body.trim();
     if (!sameFacts(reply.text, rewritten)) {

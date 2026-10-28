@@ -14,6 +14,29 @@ It replies with:
 
 Supported document types: **Exhibits, Key Documents, Other Documents, Transcripts, Recordings**. Matter numbers look like `M` followed by 5 digits (e.g. `M12205`).
 
+## Trying it
+
+### Option 1: email the agent
+
+The agent runs on my own machine rather than a paid host, so it answers while it's running. The address and the times it's online are in my submission email. Send it a request like the one above from any email account, and the reply (with the ZIP) arrives in the same thread, usually within 30 seconds.
+
+### Option 2: run it yourself in 3 minutes (no accounts or keys needed)
+
+Requires Node.js 22+.
+
+```bash
+git clone <this repo> && cd regulatory-doc-agent
+npm install
+npx playwright install chromium
+npm run ask -- "Hi Agent, can you give me Other Documents files from M12205? Thanks!"
+```
+
+`npm run ask` runs the whole pipeline on the email text you give it: understand the request, scrape the site, download and zip the files, and print the reply it would send. The ZIP is saved under `downloads/ask/`.
+
+- **No API key:** requests that name the document type exactly ("Other Documents", "Key Documents", …) work as is; the agent uses its pattern-matching parser.
+- **With an Anthropic key** (`ANTHROPIC_API_KEY` in `.env`): Claude also understands typos and abbreviations ("exibits", "key docs") and rewords the reply.
+- **To run the real email agent**, add a Gmail address and app password to `.env` (see Setup) and run `npm run dev`.
+
 ## How it works
 
 ```
@@ -71,21 +94,21 @@ docs/          design notes
 
 ## Setup
 
-Requirements: Node.js 22+ and a Gmail account with 2-step verification and an [app password](https://myaccount.google.com/apppasswords).
+Requirements: Node.js 22+. Everything in `.env` is optional; each feature turns on when its variables are set.
 
 ```bash
 npm install
 npx playwright install chromium
-cp .env.example .env   # then fill in the values
+cp .env.example .env   # then fill in what you need
 ```
 
-| Variable | Purpose |
-|---|---|
-| `HEADLESS` | `false` to watch the browser while debugging |
-| `LOG_LEVEL` / `LOG_PRETTY` | Log verbosity; `LOG_PRETTY=true` for readable local logs (needs dev dependencies), off by default for JSON lines |
-| `GMAIL_ADDRESS` / `GMAIL_APP_PASSWORD` | Inbox the agent reads and replies from |
-| `MAIL_SWEEP_INTERVAL_MS` | How often the backup check for missed mail runs (default 5 minutes; new mail normally arrives instantly) |
-| `ANTHROPIC_API_KEY` / `LLM_MODEL` | LLM used for parsing and reply prose (default `claude-haiku-5-5`) |
+| Variable | Needed for | Purpose |
+|---|---|---|
+| `GMAIL_ADDRESS` / `GMAIL_APP_PASSWORD` | `npm run dev`, `--send` | Inbox the agent reads and replies from. Needs a Gmail account with 2-step verification and an [app password](https://myaccount.google.com/apppasswords) |
+| `ANTHROPIC_API_KEY` / `LLM_MODEL` | Typo-tolerant parsing, reworded replies | Claude model (default `claude-haiku-5-5`). Without a key, the pattern-matching fallbacks are used |
+| `MAIL_SWEEP_INTERVAL_MS` | Optional | How often the backup check for missed mail runs (default 5 minutes; new mail normally arrives within seconds) |
+| `HEADLESS` | Optional | `false` to watch the browser while debugging |
+| `LOG_LEVEL` / `LOG_PRETTY` | Optional | Log verbosity; `LOG_PRETTY=true` for readable local logs (needs dev dependencies), off by default for JSON lines |
 
 ## Usage
 
@@ -122,10 +145,10 @@ Unit tests (Vitest) cover the logic that doesn't need a browser: matter number p
 - [x] Reply email
 - [x] LLM request parsing, clarification replies, and checked LLM rewording
 - [x] Inbox listener (IMAP IDLE)
-- [ ] Docker deployment
 
 ## Known limitations
 
+- Not hosted: the email agent runs on my machine, so it only answers while that's running. Hosting it means a host that allows a long-running process, Chromium (about 1 GB of RAM) and outbound SMTP. Many cheap hosts block port 465, so sending would move to port 587. Serverless platforms like Vercel don't fit the always-connected inbox listener.
 - Downloads at most 10 documents per request: the first 10 as the site lists them. The site's sort order varies by tab (some newest first, some oldest first).
 - Recordings are never downloaded; the reply lists them instead.
 - The site sometimes files the same PDF under two document numbers; both copies end up in the ZIP.
