@@ -50,7 +50,7 @@ IMAP IDLE ─► parse request (LLM) ─► search + download (Playwright) ─�
 - **At-most-once processing.** Emails are marked read when claimed, so a crash can't cause duplicate replies.
 - **Crash-only recovery.** If the mail connection drops or anything unexpected happens, the process finishes its current email and exits; a restart policy (Docker's `restart: unless-stopped` in deployment) starts a fresh one, whose first sweep picks up anything missed. There's no reconnect logic to get wrong.
 - **Nothing can freeze the agent.** Emails are handled one at a time, so every step has a limit: the browser is force-closed after 3 minutes (which fails every pending page action and file fetch, giving an apology reply), LLM calls time out after 20 seconds, and sending times out after a minute.
-- **No reply loops.** Mail from the agent itself, no-reply addresses, auto-replies and mailing lists is ignored, and no sender gets more than 5 replies an hour, in case another bot sets none of the usual headers. Replies only ever go to the `From` address, never `Reply-To`, so nobody can make the agent mail a third party.
+- **No reply loops.** Mail from the agent itself, no-reply addresses, auto-replies and mailing lists is ignored, and no sender gets more than 10 replies an hour, in case another bot sets none of the usual headers. Replies only ever go to the `From` address, never `Reply-To`, so nobody can make the agent mail a third party.
 - **Follow-ups work.** Quoted text from earlier emails is stripped before parsing, and the body of an email wins over its subject, so "now the Exhibits please" in reply to a result email fetches the Exhibits for the same matter.
 - **Site-specific selectors live in one file** (`src/site/constants.ts`), so a site change means one place to fix.
 
@@ -135,6 +135,6 @@ Unit tests (Vitest) cover the logic that doesn't need a browser: matter number p
 - Requests are processed one at a time, so a burst of emails queues up.
 - Depends on the site's current layout. If labels or structure change, selectors in `src/site/constants.ts` need updating.
 - If the process crashes or is stopped mid-request, that email gets no reply (by design, to avoid duplicates).
-- The 5-replies-an-hour limit is kept in memory, so it resets when the process restarts. Gmail's own sending limit (about 500 a day) is the backstop.
+- The 10-replies-an-hour limit is kept in memory, so it resets when the process restarts. Gmail's own sending limit (about 500 a day) is the backstop.
 - Run exactly one copy of the agent per inbox; two copies could both claim the same email.
 - No automated tests against the live site; the scraper is checked by running the CLI against real matters (existing, nonexistent, and malformed input).

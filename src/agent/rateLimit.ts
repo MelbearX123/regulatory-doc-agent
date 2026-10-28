@@ -1,5 +1,5 @@
 const WINDOW_MS = 60 * 60 * 1000;
-const MAX_REPLIES_PER_WINDOW = 5;
+export const MAX_REPLIES_PER_WINDOW = 10;
 
 // Stops a badly behaved bot that sets no auto-reply headers from ping-ponging with the agent forever.
 export function createRateLimiter(): (sender: string, now?: number) => boolean {

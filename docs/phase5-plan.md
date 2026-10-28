@@ -28,7 +28,7 @@ imapflow auto-IDLE: Gmail pushes "new mail" (exists event)
      simpleParser(raw) → InboundEmail { messageId, from, subject, text, references, headers }
      shouldIgnore?  self │ no-reply / mailer-daemon │ Auto-Submitted │ Precedence bulk/list │ List-Id
                     │ yes → log "ignored", done (already marked read)
-     rate limit?    more than 5 replies to this sender in the last hour → log, done
+     rate limit?    more than 10 replies to this sender in the last hour → log, done
      stripQuotedReply(text)   (falls back to the full text if nothing is left)
      temp dir → replyToEmail({ subject, text }, dir)          [Phase 4 pipeline]
      sendReply(from, { ...reply, subject: "Re: …" }, { inReplyTo, references })
@@ -87,7 +87,7 @@ No in-process reconnect: a dropped connection ends the process cleanly after the
 |---|---|
 | `src/email/inbound.ts` | Pure helpers, unit tested: `toInboundEmail(parsed)`, `shouldIgnore(email, agentAddress)`, `stripQuotedReply(text)`, `replySubject(subject, fallback)` |
 | `src/email/inbox.ts` | The imapflow wrapper: `connectInbox()` returns `{ claimUnread, onNewMail, onClose, close }` |
-| `src/agent/rateLimit.ts` | `allowReply(sender, now)`: at most 5 replies per sender per rolling hour, in memory (~15 lines) |
+| `src/agent/rateLimit.ts` | `allowReply(sender, now)`: at most 10 replies per sender per rolling hour, in memory (~15 lines) |
 | `src/agent/listener.ts` | The loop above plus `handleEmail` |
 | `src/index.ts` | Entry point: `startAgent()`, plus `unhandledRejection` / `uncaughtException` handlers that log and exit(1), so the restart policy can take over |
 
@@ -110,7 +110,7 @@ No in-process reconnect: a dropped connection ends the process cleanly after the
 - **Claim before processing (at-most-once).** Messages are marked `\Seen` before any slow work. A crash loses at most one reply and never sends duplicates.
 - **One email at a time.** Each request launches Chromium (around 300 MB) and takes 10–60 s, so serial processing keeps memory flat on a small host.
 - **Reply to `From` only, never `Reply-To`.** Otherwise anyone could make the agent send ZIPs to a third party.
-- **Loop protection in two layers.** Header rules catch well-behaved robots. The 5-per-hour-per-sender cap stops a badly behaved bot that sets no headers from ping-ponging forever.
+- **Loop protection in two layers.** Header rules catch well-behaved robots. The 10-per-hour-per-sender cap stops a badly behaved bot that sets no headers from ping-ponging forever.
 - **Ignored mail is still marked read**, so it isn't looked at again on every sweep.
 - **Quoted text is stripped before parsing.** A reply to our clarification email quotes ours, which contains the example "Other Documents from M12205". Stripping removes `>` lines, the "On … wrote:" line, and Outlook's "-----Original Message-----" block. Forwarded messages are kept as they are, because the forwarded part *is* the request. If stripping leaves nothing, the full text is used.
 - **Threaded replies.** `Re: <original subject>`, or `Re: <our subject>` when the original is empty, plus `In-Reply-To` and `References`, so Gmail shows the reply under the request.
@@ -121,7 +121,7 @@ No in-process reconnect: a dropped connection ends the process cleanly after the
 | Case | Handling |
 |---|---|
 | Agent's own mail, no-reply@, mailer-daemon@, auto-replies, mailing lists | Ignored (marked read, no reply) |
-| A bot that sets no auto-reply headers | Capped at 5 replies per hour, then ignored |
+| A bot that sets no auto-reply headers | Capped at 10 replies per hour, then ignored |
 | A malformed email (parser throws, no From) | Caught, logged, skipped; the loop continues |
 | HTML-only email | mailparser converts it to text |
 | Reply quoting our clarification email | Quoted part stripped first |
