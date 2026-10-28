@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "tsx src/index.ts",
+    "start": "tsx src/index.ts",
     "fetch": "tsx src/cli/fetch.ts",
     "ask": "tsx src/cli/ask.ts",
     "typecheck": "tsc --noEmit",

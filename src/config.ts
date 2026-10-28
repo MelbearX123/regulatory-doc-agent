@@ -21,7 +21,7 @@ const emailSchema = z.object({
   GMAIL_APP_PASSWORD: z.string().min(1),
   IMAP_HOST: z.string().default('imap.gmail.com'),
   SMTP_HOST: z.string().default('smtp.gmail.com'),
-  POLL_INTERVAL_MS: z.coerce.number().int().min(5_000).default(30_000),
+  MAIL_SWEEP_INTERVAL_MS: z.coerce.number().int().min(60_000).default(300_000),
 });
 
 const llmSchema = z.object({
@@ -40,7 +40,7 @@ export interface EmailConfig {
   appPassword: string;
   imapHost: string;
   smtpHost: string;
-  pollIntervalMs: number;
+  sweepIntervalMs: number;
 }
 
 export interface LlmConfig {
@@ -77,7 +77,7 @@ export function getEmailConfig(): EmailConfig {
       appPassword: env.GMAIL_APP_PASSWORD,
       imapHost: env.IMAP_HOST,
       smtpHost: env.SMTP_HOST,
-      pollIntervalMs: env.POLL_INTERVAL_MS,
+      sweepIntervalMs: env.MAIL_SWEEP_INTERVAL_MS,
     };
   }
   return emailConfig;
