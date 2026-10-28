@@ -2,8 +2,8 @@ import { mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
 import { sendReply } from '../email/send';
-import { logger } from '../logger';
-import { ReplyKind, type Reply } from '../types';
+import { logger } from '../core/logger';
+import { ReplyKind, type Reply } from '../core/types';
 
 export function isEmailAddress(value: string): boolean {
   return z.email().safeParse(value).success;

@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    include: ['src/**/*.test.ts'],
+    include: ['tests/**/*.test.ts'],
     // Set before .env is loaded (dotenv never overrides), so tests never see real credentials.
     env: {
       LOG_LEVEL: 'fatal',

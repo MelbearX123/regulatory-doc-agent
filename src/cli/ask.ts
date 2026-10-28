@@ -1,6 +1,6 @@
 import { parseArgs } from 'node:util';
-import { replyToEmail } from '../pipeline';
-import type { EmailContent } from '../types';
+import { replyToEmail } from '../agent/pipeline';
+import type { EmailContent } from '../core/types';
 import { finishWithReply, freshDownloadDir, isEmailAddress } from './common';
 
 const USAGE = [

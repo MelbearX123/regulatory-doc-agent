@@ -1,11 +1,11 @@
 import path from 'node:path';
-import { logger } from './logger';
-import { requestSlug } from './request';
-import { withBrowser } from './site/browser';
-import { downloadDocuments, listRecordings, openTab } from './site/documentList';
-import { readMetadata, readTabCounts } from './site/metadata';
-import { openMatter } from './site/search';
-import { DocType, type FetchResult, type MatterRequest } from './types';
+import { logger } from '../core/logger';
+import { requestSlug } from '../core/request';
+import { withBrowser } from './browser';
+import { downloadDocuments, listRecordings, openTab } from './documentList';
+import { readMetadata, readTabCounts } from './metadata';
+import { openMatter } from './search';
+import { DocType, type FetchResult, type MatterRequest } from '../core/types';
 import { zipFiles } from './zip';
 
 export async function fetchMatter(request: MatterRequest, outputDir: string): Promise<FetchResult> {

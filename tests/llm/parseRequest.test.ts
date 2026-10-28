@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DocType, ExtractionIssue } from '../types';
-import { askForJson } from './client';
-import { checkExtraction, parseRequest, parseWithoutLlm } from './parseRequest';
+import { DocType, ExtractionIssue } from '../../src/core/types';
+import { askForJson } from '../../src/llm/client';
+import { checkExtraction, parseRequest, parseWithoutLlm } from '../../src/llm/parseRequest';
 
-vi.mock('./client', () => ({ askForJson: vi.fn() }));
+vi.mock('../../src/llm/client', () => ({ askForJson: vi.fn() }));
 const mockAskForJson = vi.mocked(askForJson);
 
 const EMAIL = 'Hi Agent, can you give me Other Documents files from M12205? Thanks!';
@@ -38,7 +38,7 @@ describe('checkExtraction', () => {
 
 describe('parseWithoutLlm', () => {
   it('finds an exact matter number and document type', () => {
-    expect(parseWithoutLlm(EMAIL)).toEqual(OK_REQUEST);
+    expect(parseWithoutLlm({ subject: '', text: EMAIL })).toEqual(OK_REQUEST);
   });
 
   it.each([
@@ -47,7 +47,19 @@ describe('parseWithoutLlm', () => {
     ['two matters', 'Exhibits for M12205 and M10431', ExtractionIssue.MULTIPLE_REQUESTS],
     ['two document types', 'Exhibits and Transcripts for M12205', ExtractionIssue.MULTIPLE_REQUESTS],
   ])('reports %s', (_, text, issue) => {
-    expect(parseWithoutLlm(text)).toEqual({ ok: false, issue });
+    expect(parseWithoutLlm({ subject: '', text })).toEqual({ ok: false, issue });
+  });
+
+  it('fills in from the subject what the body leaves out', () => {
+    expect(parseWithoutLlm({ subject: 'M12205', text: 'Other Documents please' })).toEqual(OK_REQUEST);
+  });
+
+  it('lets the body win over a follow-up subject', () => {
+    const followUp = { subject: 'Re: M12205 – Other Documents', text: 'now the Exhibits please' };
+    expect(parseWithoutLlm(followUp)).toEqual({
+      ok: true,
+      request: { matterNumber: 'M12205', docType: DocType.EXHIBITS },
+    });
   });
 });
 

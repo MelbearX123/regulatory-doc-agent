@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import type { z } from 'zod';
-import { getLlmConfig } from '../config';
+import { getLlmConfig } from '../core/config';
 
 const TIMEOUT_MS = 20_000;
 const MAX_TOKENS = 4096;

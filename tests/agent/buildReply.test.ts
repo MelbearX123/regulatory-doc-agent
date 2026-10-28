@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildReply } from './buildReply';
-import { MatterNotFoundError, ScrapeError } from './errors';
-import { fetchMatter } from './fetchMatter';
-import { documentsResult } from './testFixtures';
-import { DocType, ReplyKind } from './types';
+import { buildReply } from '../../src/agent/buildReply';
+import { MatterNotFoundError, ScrapeError } from '../../src/core/errors';
+import { fetchMatter } from '../../src/site/fetchMatter';
+import { documentsResult } from '../fixtures';
+import { DocType, ReplyKind } from '../../src/core/types';
 
-vi.mock('./fetchMatter', () => ({ fetchMatter: vi.fn() }));
+vi.mock('../../src/site/fetchMatter', () => ({ fetchMatter: vi.fn() }));
 const mockFetchMatter = vi.mocked(fetchMatter);
 
 const request = { matterNumber: 'M12205', docType: DocType.KEY_DOCUMENTS };

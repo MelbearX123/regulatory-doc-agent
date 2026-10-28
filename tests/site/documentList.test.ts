@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isDifferentDocument, rowDescription } from './documentList';
+import { isDifferentDocument, rowDescription } from '../../src/site/documentList';
 
 describe('rowDescription', () => {
   it('drops the button captions and collapses whitespace', () => {

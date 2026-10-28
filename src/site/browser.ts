@@ -1,17 +1,30 @@
 import { chromium, type Page } from 'playwright';
-import { appConfig } from '../config';
-import { logger } from '../logger';
+import { appConfig } from '../core/config';
+import { ScrapeError } from '../core/errors';
+import { logger } from '../core/logger';
+import { TIMEOUTS } from './constants';
 
 export async function withBrowser<T>(fn: (page: Page) => Promise<T>): Promise<T> {
   logger.debug({ headless: appConfig.headless }, 'Launching browser');
   const browser = await chromium.launch({ headless: appConfig.headless });
+  // Closing the browser makes every pending Playwright call fail at once, file fetches included,
+  // so a hung site can't hold up the agent for longer than this.
+  let timedOut = false;
+  const deadline = setTimeout(() => {
+    timedOut = true;
+    void browser.close();
+  }, TIMEOUTS.browserSession);
   try {
     // Files are fetched from their URL directly (see download.ts), so the browser's own copy isn't needed.
     // A tall window lets the virtualized document grid show 10+ rows without scrolling.
     const context = await browser.newContext({ acceptDownloads: false, viewport: { width: 1280, height: 1600 } });
     const page = await context.newPage();
     return await fn(page);
+  } catch (err) {
+    if (timedOut) throw new ScrapeError(`Gave up after ${TIMEOUTS.browserSession / 1000} s`, { cause: err });
+    throw err;
   } finally {
+    clearTimeout(deadline);
     await browser.close();
     logger.debug('Browser closed');
   }

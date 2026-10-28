@@ -1,9 +1,9 @@
 import { buildReply } from './buildReply';
-import { composeClarificationReply } from './email/compose';
-import { parseRequest } from './llm/parseRequest';
-import { polishReply } from './llm/polishReply';
-import { logger } from './logger';
-import type { EmailContent, Reply } from './types';
+import { composeClarificationReply } from '../email/compose';
+import { parseRequest } from '../llm/parseRequest';
+import { polishReply } from '../llm/polishReply';
+import { logger } from '../core/logger';
+import type { EmailContent, Reply } from '../core/types';
 
 export async function replyToEmail(email: EmailContent, outputDir: string): Promise<Reply> {
   const parsed = await parseRequest(email);

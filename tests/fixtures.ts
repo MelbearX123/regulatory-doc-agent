@@ -1,4 +1,4 @@
-import { DocType, StopReason, type FetchResult, type MatterMetadata, type SavedFile, type TabCounts } from './types';
+import { DocType, StopReason, type FetchResult, type MatterMetadata, type SavedFile, type TabCounts } from '../src/core/types';
 
 export const M12205_METADATA: MatterMetadata = {
   matterNumber: 'M12205',

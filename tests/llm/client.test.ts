@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { askForJson } from './client';
+import { askForJson } from '../../src/llm/client';
 
 const { parse } = vi.hoisted(() => ({ parse: vi.fn() }));
 vi.mock('@anthropic-ai/sdk', () => ({

@@ -1,7 +1,7 @@
 import { parseArgs } from 'node:util';
-import { buildReply } from '../buildReply';
-import { normalizeMatterNumber, requestSlug } from '../request';
-import { DOC_TYPES, type DocType, type MatterRequest } from '../types';
+import { buildReply } from '../agent/buildReply';
+import { normalizeMatterNumber, requestSlug } from '../core/request';
+import { DOC_TYPES, type DocType, type MatterRequest } from '../core/types';
 import { finishWithReply, freshDownloadDir, isEmailAddress } from './common';
 
 const USAGE = [

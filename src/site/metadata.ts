@@ -1,6 +1,6 @@
 import type { Page } from 'playwright';
-import { ScrapeError } from '../errors';
-import { DocType, DocTypeSchema, type MatterMetadata, type TabCounts } from '../types';
+import { ScrapeError } from '../core/errors';
+import { DocType, DocTypeSchema, type MatterMetadata, type TabCounts } from '../core/types';
 import { HEADER_FIELDS, TAB_LABEL, headerFieldSelector, type HeaderField } from './constants';
 
 async function readHeaderField(page: Page, field: HeaderField): Promise<string | null> {

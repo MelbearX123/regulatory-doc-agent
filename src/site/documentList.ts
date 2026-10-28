@@ -1,8 +1,8 @@
 import path from 'node:path';
 import type { Locator, Page } from 'playwright';
-import { ScrapeError } from '../errors';
-import { logger } from '../logger';
-import { StopReason, type DocType, type DownloadOutcome, type RecordingsListing, type SavedFile } from '../types';
+import { ScrapeError } from '../core/errors';
+import { logger } from '../core/logger';
+import { StopReason, type DocType, type DownloadOutcome, type RecordingsListing, type SavedFile } from '../core/types';
 import {
   ATTACHMENT_BUDGET_BYTES,
   LIST,

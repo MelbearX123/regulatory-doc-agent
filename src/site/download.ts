@@ -1,9 +1,9 @@
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Locator, Page } from 'playwright';
-import { ScrapeError } from '../errors';
-import { logger } from '../logger';
-import type { SavedFile } from '../types';
+import { ScrapeError } from '../core/errors';
+import { logger } from '../core/logger';
+import type { SavedFile } from '../core/types';
 import { DIALOGS, LIST, TIMEOUTS } from './constants';
 
 export interface FetchedFile {

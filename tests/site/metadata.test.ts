@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { ScrapeError } from '../errors';
-import { DocType } from '../types';
-import { parseTabCounts, toIsoDate } from './metadata';
+import { ScrapeError } from '../../src/core/errors';
+import { DocType } from '../../src/core/types';
+import { parseTabCounts, toIsoDate } from '../../src/site/metadata';
 
 const LABELS = ['Exhibits - 13', 'Key Documents - 6', 'Other Documents - 43', 'Transcripts - 0', 'Recordings - 0'];
 

@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { M12205_METADATA, documentsResult, savedFile, tabCounts } from '../testFixtures';
-import { DocType, ExtractionIssue, ReplyKind, StopReason, type ClarificationIssue, type FetchResult } from '../types';
+import { M12205_METADATA, documentsResult, savedFile, tabCounts } from '../fixtures';
+import { DocType, ExtractionIssue, ReplyKind, StopReason, type ClarificationIssue, type FetchResult } from '../../src/core/types';
 import {
   AGENT_NAME,
   composeClarificationReply,
   composeErrorReply,
   composeNotFoundReply,
   composeResultReply,
-} from './compose';
+} from '../../src/email/compose';
 
 const request = { matterNumber: 'M12205', docType: DocType.EXHIBITS };
 
