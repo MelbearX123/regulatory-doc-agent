@@ -29,6 +29,9 @@ describe('sendReply', () => {
       port: 465,
       secure: true,
       auth: { user: 'agent@example.com', pass: 'test-password' },
+      connectionTimeout: 30_000,
+      greetingTimeout: 30_000,
+      socketTimeout: 60_000,
     });
     expect(sendMail).toHaveBeenCalledWith({
       from: { name: 'UARB Document Agent', address: 'agent@example.com' },

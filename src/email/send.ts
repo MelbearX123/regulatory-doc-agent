@@ -21,6 +21,10 @@ function getTransporter(): Transporter {
       port: SMTP_PORT,
       secure: true,
       auth: { user: address, pass: appPassword },
+      // nodemailer's defaults allow minutes of waiting; the agent handles one email at a time, so fail fast.
+      connectionTimeout: 30_000,
+      greetingTimeout: 30_000,
+      socketTimeout: 60_000,
     });
   }
   return transporter;

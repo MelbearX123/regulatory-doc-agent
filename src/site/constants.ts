@@ -3,6 +3,7 @@ import { DOC_TYPES, type DocType } from '../types';
 export const SITE_URL = 'https://uarb.novascotia.ca/fmi/webd/UARB15';
 
 export const TIMEOUTS = {
+  browserSession: 180_000,
   pageLoad: 30_000,
   searchResult: 20_000,
   beforeTyping: 1_000,
