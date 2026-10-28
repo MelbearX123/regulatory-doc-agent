@@ -50,4 +50,11 @@ describe('polishReply', () => {
     expect(await polishReply(notFound)).toBe(notFound);
     expect(mockAskForJson).not.toHaveBeenCalled();
   });
+
+  it('keeps the template without calling the LLM when no API key is configured', async () => {
+    vi.stubEnv('ANTHROPIC_API_KEY', '');
+    expect(await polishReply(template)).toBe(template);
+    expect(mockAskForJson).not.toHaveBeenCalled();
+    vi.unstubAllEnvs();
+  });
 });
