@@ -71,6 +71,19 @@ export interface EmailContent {
   text: string;
 }
 
+export interface InboundEmail extends EmailContent {
+  from: string; // lowercased address
+  messageId: string | null;
+  references: string[];
+  automated: boolean; // headers say software sent it: auto-reply, mailing list or bulk mail
+}
+
+export enum IgnoreReason {
+  OWN_ADDRESS = 'ownAddress',
+  NO_REPLY_SENDER = 'noReplySender',
+  AUTOMATED = 'automated',
+}
+
 export enum ExtractionIssue {
   NONE = 'none',
   NO_MATTER_NUMBER = 'noMatterNumber',
