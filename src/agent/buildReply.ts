@@ -1,8 +1,8 @@
-import { composeErrorReply, composeNotFoundReply, composeResultReply } from './email/compose';
-import { MatterNotFoundError } from './errors';
-import { fetchMatter } from './fetchMatter';
-import { logger } from './logger';
-import type { MatterRequest, Reply } from './types';
+import { composeErrorReply, composeNotFoundReply, composeResultReply } from '../email/compose';
+import { MatterNotFoundError } from '../core/errors';
+import { fetchMatter } from '../site/fetchMatter';
+import { logger } from '../core/logger';
+import type { MatterRequest, Reply } from '../core/types';
 
 // Every request gets a reply, so failures become a not-found or apology reply instead of an exception.
 export async function buildReply(request: MatterRequest, outputDir: string): Promise<Reply> {

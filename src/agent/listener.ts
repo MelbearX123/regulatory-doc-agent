@@ -2,11 +2,11 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { simpleParser } from 'mailparser';
-import { getEmailConfig } from './config';
-import { ignoreReason, replySubject, stripQuotedReply, threadingFor, toInboundEmail } from './email/inbound';
-import { connectInbox } from './email/inbox';
-import { sendReply } from './email/send';
-import { logger } from './logger';
+import { getEmailConfig } from '../core/config';
+import { ignoreReason, replySubject, stripQuotedReply, threadingFor, toInboundEmail } from '../email/inbound';
+import { connectInbox } from '../email/inbox';
+import { sendReply } from '../email/send';
+import { logger } from '../core/logger';
 import { replyToEmail } from './pipeline';
 import { createRateLimiter } from './rateLimit';
 

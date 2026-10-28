@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { composeNotFoundReply, composeResultReply } from '../email/compose';
-import { documentsResult } from '../testFixtures';
-import { DocType } from '../types';
-import { askForJson } from './client';
-import { polishReply, sameFacts } from './polishReply';
+import { composeNotFoundReply, composeResultReply } from '../../src/email/compose';
+import { documentsResult } from '../fixtures';
+import { DocType } from '../../src/core/types';
+import { askForJson } from '../../src/llm/client';
+import { polishReply, sameFacts } from '../../src/llm/polishReply';
 
-vi.mock('./client', () => ({ askForJson: vi.fn() }));
+vi.mock('../../src/llm/client', () => ({ askForJson: vi.fn() }));
 const mockAskForJson = vi.mocked(askForJson);
 
 const template = composeResultReply(documentsResult(DocType.OTHER_DOCUMENTS, 10));

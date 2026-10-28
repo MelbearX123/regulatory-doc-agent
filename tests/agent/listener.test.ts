@@ -1,12 +1,12 @@
 import { existsSync } from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createSweeper, handleEmail } from './agent';
-import { sendReply } from './email/send';
-import { replyToEmail } from './pipeline';
-import { ReplyKind, type Reply } from './types';
+import { createSweeper, handleEmail } from '../../src/agent/listener';
+import { sendReply } from '../../src/email/send';
+import { replyToEmail } from '../../src/agent/pipeline';
+import { ReplyKind, type Reply } from '../../src/core/types';
 
-vi.mock('./pipeline', () => ({ replyToEmail: vi.fn() }));
-vi.mock('./email/send', () => ({ sendReply: vi.fn() }));
+vi.mock('../../src/agent/pipeline', () => ({ replyToEmail: vi.fn() }));
+vi.mock('../../src/email/send', () => ({ sendReply: vi.fn() }));
 
 const AGENT = 'agent@example.com';
 const reply: Reply = { kind: ReplyKind.RESULT, subject: 'M12205 – Other Documents', text: 'Hi', attachment: null };

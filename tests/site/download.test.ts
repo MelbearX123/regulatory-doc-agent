@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { saveFetchedFile } from './download';
+import { saveFetchedFile } from '../../src/site/download';
 
 describe('saveFetchedFile', () => {
   let dir: string;

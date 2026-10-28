@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createRateLimiter } from './rateLimit';
+import { createRateLimiter } from '../../src/agent/rateLimit';
 
 const HOUR = 60 * 60 * 1000;
 

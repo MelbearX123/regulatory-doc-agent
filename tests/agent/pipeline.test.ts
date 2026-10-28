@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildReply } from './buildReply';
-import { composeResultReply } from './email/compose';
-import { parseRequest } from './llm/parseRequest';
-import { polishReply } from './llm/polishReply';
-import { replyToEmail } from './pipeline';
-import { documentsResult } from './testFixtures';
-import { DocType, ExtractionIssue, ReplyKind } from './types';
+import { buildReply } from '../../src/agent/buildReply';
+import { composeResultReply } from '../../src/email/compose';
+import { parseRequest } from '../../src/llm/parseRequest';
+import { polishReply } from '../../src/llm/polishReply';
+import { replyToEmail } from '../../src/agent/pipeline';
+import { documentsResult } from '../fixtures';
+import { DocType, ExtractionIssue, ReplyKind } from '../../src/core/types';
 
-vi.mock('./llm/parseRequest', () => ({ parseRequest: vi.fn() }));
-vi.mock('./buildReply', () => ({ buildReply: vi.fn() }));
-vi.mock('./llm/polishReply', () => ({ polishReply: vi.fn((reply: unknown) => reply) }));
+vi.mock('../../src/llm/parseRequest', () => ({ parseRequest: vi.fn() }));
+vi.mock('../../src/agent/buildReply', () => ({ buildReply: vi.fn() }));
+vi.mock('../../src/llm/polishReply', () => ({ polishReply: vi.fn((reply: unknown) => reply) }));
 
 const email = { subject: '', text: 'Other Documents from M12205' };
 const request = { matterNumber: 'M12205', docType: DocType.OTHER_DOCUMENTS };

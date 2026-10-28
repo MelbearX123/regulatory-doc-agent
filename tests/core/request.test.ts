@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { findMatterNumbers, normalizeMatterNumber, requestSlug } from './request';
-import { DocType } from './types';
+import { findMatterNumbers, normalizeMatterNumber, requestSlug } from '../../src/core/request';
+import { DocType } from '../../src/core/types';
 
 describe('normalizeMatterNumber', () => {
   it.each([

@@ -10,7 +10,7 @@ import {
   type MatterRequest,
   type Reply,
   type TabCounts,
-} from '../types';
+} from '../core/types';
 
 export const AGENT_NAME = 'UARB Document Agent';
 

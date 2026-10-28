@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { logger } from '../logger';
-import { findMatterNumbers, normalizeMatterNumber } from '../request';
-import { DOC_TYPES, DocType, ExtractionIssue, type EmailContent, type ParseResult } from '../types';
+import { logger } from '../core/logger';
+import { findMatterNumbers, normalizeMatterNumber } from '../core/request';
+import { DOC_TYPES, DocType, ExtractionIssue, type EmailContent, type ParseResult } from '../core/types';
 import { askForJson } from './client';
 
 const ExtractionSchema = z.object({

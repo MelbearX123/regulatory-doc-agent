@@ -1,7 +1,7 @@
 import { simpleParser } from 'mailparser';
 import { describe, expect, it } from 'vitest';
-import { IgnoreReason, type InboundEmail } from '../types';
-import { ignoreReason, replySubject, stripQuotedReply, threadingFor, toInboundEmail } from './inbound';
+import { IgnoreReason, type InboundEmail } from '../../src/core/types';
+import { ignoreReason, replySubject, stripQuotedReply, threadingFor, toInboundEmail } from '../../src/email/inbound';
 
 const AGENT = 'Agent@Example.com';
 

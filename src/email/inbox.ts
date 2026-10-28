@@ -1,6 +1,6 @@
 import { ImapFlow } from 'imapflow';
-import { getEmailConfig } from '../config';
-import { logger } from '../logger';
+import { getEmailConfig } from '../core/config';
+import { logger } from '../core/logger';
 
 const IMAP_PORT = 993;
 const MAILBOX = 'INBOX';

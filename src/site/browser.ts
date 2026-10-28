@@ -1,7 +1,7 @@
 import { chromium, type Page } from 'playwright';
-import { appConfig } from '../config';
-import { ScrapeError } from '../errors';
-import { logger } from '../logger';
+import { appConfig } from '../core/config';
+import { ScrapeError } from '../core/errors';
+import { logger } from '../core/logger';
 import { TIMEOUTS } from './constants';
 
 export async function withBrowser<T>(fn: (page: Page) => Promise<T>): Promise<T> {

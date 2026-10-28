@@ -1,5 +1,5 @@
-import { startAgent } from './agent';
-import { logger } from './logger';
+import { startAgent } from './agent/listener';
+import { logger } from './core/logger';
 
 // Anything unexpected ends the process; the restart policy (see README) brings it back.
 process.on('unhandledRejection', (reason) => {

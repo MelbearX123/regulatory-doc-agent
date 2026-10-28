@@ -1,7 +1,7 @@
 import nodemailer, { type Transporter } from 'nodemailer';
-import { getEmailConfig } from '../config';
-import { logger } from '../logger';
-import type { Reply } from '../types';
+import { getEmailConfig } from '../core/config';
+import { logger } from '../core/logger';
+import type { Reply } from '../core/types';
 import { AGENT_NAME } from './compose';
 
 const SMTP_PORT = 465;

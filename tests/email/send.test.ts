@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { savedFile } from '../testFixtures';
-import { ReplyKind, type Reply } from '../types';
-import { sendReply } from './send';
+import { savedFile } from '../fixtures';
+import { ReplyKind, type Reply } from '../../src/core/types';
+import { sendReply } from '../../src/email/send';
 
 const { sendMail, createTransport } = vi.hoisted(() => {
   const sendMail = vi.fn();
@@ -57,7 +57,7 @@ describe('sendReply', () => {
   it('reuses one SMTP connection across sends', async () => {
     vi.resetModules();
     createTransport.mockClear();
-    const { sendReply: freshSendReply } = await import('./send');
+    const { sendReply: freshSendReply } = await import('../../src/email/send');
 
     await freshSendReply('a@example.com', reply);
     await freshSendReply('b@example.com', reply);

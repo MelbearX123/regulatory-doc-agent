@@ -1,7 +1,7 @@
 import type { Page } from 'playwright';
-import { MatterNotFoundError, ScrapeError } from '../errors';
-import { logger } from '../logger';
-import { normalizeMatterNumber } from '../request';
+import { MatterNotFoundError, ScrapeError } from '../core/errors';
+import { logger } from '../core/logger';
+import { normalizeMatterNumber } from '../core/request';
 import {
   HEADER_FIELDS,
   SEARCH,

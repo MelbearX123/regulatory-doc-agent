@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DocType, ExtractionIssue } from '../types';
-import { askForJson } from './client';
-import { checkExtraction, parseRequest, parseWithoutLlm } from './parseRequest';
+import { DocType, ExtractionIssue } from '../../src/core/types';
+import { askForJson } from '../../src/llm/client';
+import { checkExtraction, parseRequest, parseWithoutLlm } from '../../src/llm/parseRequest';
 
-vi.mock('./client', () => ({ askForJson: vi.fn() }));
+vi.mock('../../src/llm/client', () => ({ askForJson: vi.fn() }));
 const mockAskForJson = vi.mocked(askForJson);
 
 const EMAIL = 'Hi Agent, can you give me Other Documents files from M12205? Thanks!';

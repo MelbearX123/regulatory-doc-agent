@@ -1,5 +1,5 @@
 import type { ParsedMail } from 'mailparser';
-import { IgnoreReason, type InboundEmail } from '../types';
+import { IgnoreReason, type InboundEmail } from '../core/types';
 import type { Threading } from './send';
 
 const NO_REPLY_SENDER = /^(no-?reply|do-?not-?reply|mailer-daemon|postmaster)\b/i;

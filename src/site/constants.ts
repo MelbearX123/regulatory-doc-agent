@@ -1,4 +1,4 @@
-import { DOC_TYPES, type DocType } from '../types';
+import { DOC_TYPES, type DocType } from '../core/types';
 
 export const SITE_URL = 'https://uarb.novascotia.ca/fmi/webd/UARB15';
 

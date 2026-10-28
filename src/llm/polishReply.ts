@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { AGENT_NAME } from '../email/compose';
-import { logger } from '../logger';
-import { ReplyKind, type Reply } from '../types';
+import { logger } from '../core/logger';
+import { ReplyKind, type Reply } from '../core/types';
 import { askForJson } from './client';
 
 const RewriteSchema = z.object({ body: z.string() });
