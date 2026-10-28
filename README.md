@@ -54,6 +54,21 @@ IMAP IDLE ─► parse request (LLM) ─► search + download (Playwright) ─�
 - **Follow-ups work.** Quoted text from earlier emails is stripped before parsing, and the body of an email wins over its subject, so "now the Exhibits please" in reply to a result email fetches the Exhibits for the same matter.
 - **Site-specific selectors live in one file** (`src/site/constants.ts`), so a site change means one place to fix.
 
+## Project layout
+
+```
+src/
+  index.ts     entry point for the email agent (npm run dev / npm start)
+  agent/       the inbox listener, the email → reply pipeline, error-to-reply mapping, reply limit
+  core/        config (env validation), logger, errors, shared types, matter-number helpers
+  site/        everything that touches the UARB website: browser, search, metadata, downloads, ZIP
+  email/       reading inbound mail, writing replies, sending over SMTP, the IMAP inbox
+  llm/         Claude calls: request parsing and checked rewording
+  cli/         npm run fetch / npm run ask
+tests/         unit tests, mirroring src/ (plus shared fixtures)
+docs/          design notes
+```
+
 ## Setup
 
 Requirements: Node.js 22+ and a Gmail account with 2-step verification and an [app password](https://myaccount.google.com/apppasswords).

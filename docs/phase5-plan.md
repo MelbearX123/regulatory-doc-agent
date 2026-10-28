@@ -40,7 +40,7 @@ imapflow auto-IDLE: Gmail pushes "new mail" (exists event)
    SIGINT / SIGTERM → log out and exit (the email in progress, already marked read, gets no reply)
 ```
 
-## What `agent.ts` will look like (~80 lines)
+## What `src/agent/listener.ts` will look like (~80 lines)
 
 ```ts
 let running = false;
@@ -87,19 +87,19 @@ No in-process reconnect: a dropped connection ends the process cleanly after the
 |---|---|
 | `src/email/inbound.ts` | Pure helpers, unit tested: `toInboundEmail(parsed)`, `shouldIgnore(email, agentAddress)`, `stripQuotedReply(text)`, `replySubject(subject, fallback)` |
 | `src/email/inbox.ts` | The imapflow wrapper: `connectInbox()` returns `{ claimUnread, onNewMail, onClose, close }` |
-| `src/rateLimit.ts` | `allowReply(sender, now)`: at most 5 replies per sender per rolling hour, in memory (~15 lines) |
-| `src/agent.ts` | The loop above plus `handleEmail` |
+| `src/agent/rateLimit.ts` | `allowReply(sender, now)`: at most 5 replies per sender per rolling hour, in memory (~15 lines) |
+| `src/agent/listener.ts` | The loop above plus `handleEmail` |
 | `src/index.ts` | Entry point: `startAgent()`, plus `unhandledRejection` / `uncaughtException` handlers that log and exit(1), so the restart policy can take over |
 
 ### Changed
 
 | File | Change |
 |---|---|
-| `src/types.ts` | `InboundEmail` (extends `EmailContent` with `messageId`, `from`, `references`, `headers`) |
+| `src/core/types.ts` | `InboundEmail` (extends `EmailContent` with `messageId`, `from`, `references`, `headers`) |
 | `src/site/browser.ts`, `src/site/constants.ts` | The 3-minute browser deadline (fixes the earlier review item about requests having no overall time limit) |
 | `src/email/send.ts` | nodemailer timeouts |
 | `src/llm/parseRequest.ts` | Follow-up replies: the body wins over the subject. The prompt says the subject only fills gaps, and the fallback parser reads the body first and uses the subject only for missing parts. Example: subject "Re: M12205 – Other Documents" + body "now the Exhibits please" → M12205 / Exhibits |
-| `src/config.ts`, `.env.example`, README | `POLL_INTERVAL_MS` (30 s) becomes `MAIL_SWEEP_INTERVAL_MS` (default 5 min) in all three places |
+| `src/core/config.ts`, `.env.example`, README | `POLL_INTERVAL_MS` (30 s) becomes `MAIL_SWEEP_INTERVAL_MS` (default 5 min) in all three places |
 | `package.json` | `start` script for deployment |
 | `README.md` | How the listener works, how to run it, status, limitations |
 
